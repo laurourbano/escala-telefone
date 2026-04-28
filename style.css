@@ -152,7 +152,9 @@ body {
 }
 
 /* Buttons */
-.primary-btn, .secondary-btn, .icon-btn {
+.primary-btn,
+.secondary-btn,
+.icon-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -168,11 +170,13 @@ body {
     white-space: nowrap;
 }
 
-.actions .primary-btn, .actions .secondary-btn {
+.actions .primary-btn,
+.actions .secondary-btn {
     justify-content: flex-start;
 }
 
-.actions .primary-btn i, .actions .secondary-btn i {
+.actions .primary-btn i,
+.actions .secondary-btn i {
     font-size: 1.25rem;
     flex-shrink: 0;
 }
@@ -249,7 +253,8 @@ body {
 }
 
 /* Lists */
-.people-list, .shifts-list {
+.people-list,
+.shifts-list {
     flex: 1;
     width: 100%;
     max-width: 1400px;
@@ -261,12 +266,16 @@ body {
     align-content: start;
 }
 
-.people-list::-webkit-scrollbar, .shifts-list::-webkit-scrollbar, .schedule-board::-webkit-scrollbar {
+.people-list::-webkit-scrollbar,
+.shifts-list::-webkit-scrollbar,
+.schedule-board::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
-.people-list::-webkit-scrollbar-thumb, .shifts-list::-webkit-scrollbar-thumb, .schedule-board::-webkit-scrollbar-thumb {
+.people-list::-webkit-scrollbar-thumb,
+.shifts-list::-webkit-scrollbar-thumb,
+.schedule-board::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 10px;
 }
@@ -322,7 +331,7 @@ body {
 
 .card-actions button:hover {
     color: var(--text-main);
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .card-actions button.delete-btn:hover {
@@ -338,10 +347,25 @@ body {
     text-transform: uppercase;
 }
 
-.badge.disponivel { background-color: rgba(16, 185, 129, 0.15); color: var(--success); }
-.badge.folga { background-color: rgba(245, 158, 11, 0.15); color: var(--warning); }
-.badge.ferias { background-color: rgba(139, 92, 246, 0.15); color: var(--primary); }
-.badge.atestado { background-color: rgba(239, 68, 68, 0.15); color: var(--danger); }
+.badge.disponivel {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+
+.badge.folga {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+
+.badge.ferias {
+    background-color: rgba(139, 92, 246, 0.15);
+    color: var(--primary);
+}
+
+.badge.atestado {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
 
 .card-meta {
     font-size: 0.85rem;
@@ -354,7 +378,7 @@ body {
     display: flex;
     flex-direction: column;
     background: radial-gradient(circle at top right, rgba(139, 92, 246, 0.1), transparent 50%),
-                radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.1), transparent 50%);
+        radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.1), transparent 50%);
 }
 
 .schedule-header {
@@ -478,7 +502,7 @@ body {
 
 .shift-dropzone {
     flex: 1;
-    min-height: 80px;
+    min-height: 50px;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -500,7 +524,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     cursor: grab;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     overflow: hidden;
 }
 
@@ -525,7 +549,7 @@ body {
 }
 
 .sortable-drag {
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3) !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3) !important;
     opacity: 1 !important;
 }
 
@@ -546,10 +570,11 @@ body {
     color: var(--text-muted);
 }
 
-.form-group input, .form-group select {
+.form-group input,
+.form-group select {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    background-color: rgba(0,0,0,0.2);
+    background-color: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text-main);
@@ -557,7 +582,8 @@ body {
     transition: var(--transition);
 }
 
-.form-group input:focus, .form-group select:focus {
+.form-group input:focus,
+.form-group select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
@@ -580,7 +606,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    background-color: rgba(255,255,255,0.05);
+    background-color: rgba(255, 255, 255, 0.05);
     padding: 0.4rem 0.8rem;
     border-radius: 20px;
     font-size: 0.85rem;
@@ -590,10 +616,10 @@ body {
 }
 
 .checkbox-label:hover {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-.checkbox-label input:checked + span {
+.checkbox-label input:checked+span {
     color: var(--primary);
     font-weight: 600;
 }
@@ -706,7 +732,9 @@ body {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Validation warnings */
@@ -732,11 +760,17 @@ body {
 
 /* --- PRINT STYLES (EXCEL-LIKE TABLE) --- */
 @media print {
-    .sidebar, .topbar, .menu, .panel-header:not(.schedule-header), .panel:not(.schedule-view) {
+
+    .sidebar,
+    .topbar,
+    .menu,
+    .panel-header:not(.schedule-header),
+    .panel:not(.schedule-view) {
         display: none !important;
     }
-    
-    .app-container, .main-content {
+
+    .app-container,
+    .main-content {
         display: block !important;
         height: auto !important;
         overflow: visible !important;
@@ -762,7 +796,8 @@ body {
         border-bottom: 1px solid black;
     }
 
-    .grid-row.even-row, .grid-row.odd-row {
+    .grid-row.even-row,
+    .grid-row.odd-row {
         background: none;
     }
 
@@ -777,7 +812,7 @@ body {
         padding: 0.1rem;
         height: 60px;
     }
-    
+
     .grid-cell:last-child {
         border-right: none;
     }

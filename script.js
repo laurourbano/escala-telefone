@@ -363,6 +363,26 @@ function validateSchedule() {
 
     const personShiftCount = {};
     const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+    const personDays = {};
+    const personSameDayErrors = new Set();
+
+    // First pass: identify same-day overlaps
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            const dayKey = `${shift.id}-${day}`;
+            const scheduledIds = state.schedule[dayKey] || [];
+            
+            scheduledIds.forEach(pId => {
+                if (!personDays[pId]) personDays[pId] = [];
+                personDays[pId].push(day);
+                
+                const occurrences = personDays[pId].filter(d => d === day).length;
+                if (occurrences > 1) {
+                    personSameDayErrors.add(`${pId}-${day}`);
+                }
+            });
+        });
+    });
 
     state.shifts.forEach(shift => {
         days.forEach(day => {
@@ -388,6 +408,11 @@ function validateSchedule() {
                         highlightPerson(shift.id, day, pId, 'conflict-item');
                     }
                 }
+
+                if (personSameDayErrors.has(`${pId}-${day}`)) {
+                    hasError = true;
+                    highlightPerson(shift.id, day, pId, 'error-item');
+                }
             });
         });
     });
@@ -406,7 +431,7 @@ function validateSchedule() {
 
     const statusEl = document.getElementById('validation-status');
     if (hasError) {
-        statusEl.innerHTML = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos Graves (Atestado/Férias/Excesso)</span>';
+        statusEl.innerHTML = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos (2 no mesmo dia / Excesso / Atestado)</span>';
     } else if (hasWarning) {
         statusEl.innerHTML = '<span class="status-badge warning"><i class="ph ph-warning"></i> Distribuição Desbalanceada</span>';
     } else {
