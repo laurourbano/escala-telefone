@@ -80,7 +80,31 @@
                         <span class="status-badge success"><i class="ph ph-check-circle"></i> Equilibrado</span>
                     </div>
                 </div>
-                
+
+                <details class="config-accordion">
+                    <summary><i class="ph ph-sliders"></i> Configurar Período e Feriados</summary>
+                    <div class="accordion-content">
+                        <div class="config-section">
+                            <h4>Período da Escala</h4>
+                            <div class="schedule-period">
+                                <input type="date" id="schedule-start-date" class="date-input">
+                                <span>até</span>
+                                <input type="date" id="schedule-end-date" class="date-input">
+                            </div>
+                        </div>
+
+                        <div class="config-section">
+                            <h4>Datas Fechadas (Feriados / CRF-PR)</h4>
+                            <div class="closed-dates-controls">
+                                <input type="date" id="input-closed-date" class="date-input">
+                                <button id="btn-add-closed-date" class="secondary-btn btn-sm">Adicionar</button>
+                                <button id="btn-fetch-holidays" class="secondary-btn btn-sm" title="Busca feriados nacionais da BrasilAPI"><i class="ph ph-calendar-plus"></i> Feriados Nacionais</button>
+                            </div>
+                            <div id="closed-dates-list" class="closed-dates-list"></div>
+                        </div>
+                    </div>
+                </details>
+
                 <div class="schedule-board" id="schedule-board">
                     <!-- Shifts will be rendered as columns here -->
                 </div>
@@ -104,12 +128,20 @@
                     </div>
                     <div class="form-group">
                         <label>Status</label>
-                        <select id="person-status">
+                        <select id="person-status" onchange="document.getElementById('unavailability-dates').style.display = this.value === 'disponivel' ? 'none' : 'block'">
                             <option value="disponivel">Disponível</option>
                             <option value="folga">Folga</option>
                             <option value="ferias">Férias</option>
                             <option value="atestado">Atestado</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="unavailability-dates" style="display: none;">
+                        <label>Período de Indisponibilidade</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="date" id="person-unavailability-start" class="date-input" style="flex: 1;">
+                            <span>até</span>
+                            <input type="date" id="person-unavailability-end" class="date-input" style="flex: 1;">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Máximo de Turnos</label>

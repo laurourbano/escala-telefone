@@ -3,13 +3,26 @@ let state = {
     people: JSON.parse(localStorage.getItem('escala_people')) || [],
     shifts: JSON.parse(localStorage.getItem('escala_shifts')) || [],
     schedule: JSON.parse(localStorage.getItem('escala_schedule')) || {},
-    config: JSON.parse(localStorage.getItem('escala_config')) || { apiKey: '' }
+    config: JSON.parse(localStorage.getItem('escala_config')) || { apiKey: '' },
+    scheduleStartDate: localStorage.getItem('escala_start_date') || '',
+    scheduleEndDate: localStorage.getItem('escala_end_date') || '',
+    closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || []
 };
+
+if (!state.scheduleStartDate) {
+    const today = new Date();
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + ((1 + 7 - today.getDay()) % 7 || 7));
+    state.scheduleStartDate = nextMonday.toISOString().split('T')[0];
+    const nextFriday = new Date(nextMonday);
+    nextFriday.setDate(nextMonday.getDate() + 4);
+    state.scheduleEndDate = nextFriday.toISOString().split('T')[0];
+}
 
 // Migration check for old schedule format
 if (Object.keys(state.schedule).length > 0) {
     const firstKey = Object.keys(state.schedule)[0];
-    if (!firstKey.includes('-Segunda') && !firstKey.includes('-Terça') && !firstKey.includes('-Quarta') && !firstKey.includes('-Quinta') && !firstKey.includes('-Sexta')) {
+    if (firstKey.includes('-Segunda')) {
         state.schedule = {};
     }
 }
@@ -25,11 +38,23 @@ const shiftsList = document.getElementById('shifts-list');
 const scheduleBoard = document.getElementById('schedule-board');
 const aiApiKeyInput = document.getElementById('ai-api-key');
 
+const scheduleStartDateInput = document.getElementById('schedule-start-date');
+const scheduleEndDateInput = document.getElementById('schedule-end-date');
+const inputClosedDate = document.getElementById('input-closed-date');
+const btnAddClosedDate = document.getElementById('btn-add-closed-date');
+const btnFetchHolidays = document.getElementById('btn-fetch-holidays');
+const closedDatesList = document.getElementById('closed-dates-list');
+
 // Initialize
 function init() {
     sortShifts(); // Guarantee shifts are sorted initially
     renderPeople();
     renderShifts();
+    
+    scheduleStartDateInput.value = state.scheduleStartDate;
+    scheduleEndDateInput.value = state.scheduleEndDate;
+    renderClosedDates();
+
     renderScheduleBoard();
     setupEventListeners();
     aiApiKeyInput.value = state.config.apiKey;
@@ -54,6 +79,64 @@ function saveState() {
     localStorage.setItem('escala_shifts', JSON.stringify(state.shifts));
     localStorage.setItem('escala_schedule', JSON.stringify(state.schedule));
     localStorage.setItem('escala_config', JSON.stringify(state.config));
+    localStorage.setItem('escala_start_date', state.scheduleStartDate);
+    localStorage.setItem('escala_end_date', state.scheduleEndDate);
+    localStorage.setItem('escala_closed_dates', JSON.stringify(state.closedDates));
+}
+
+// Date Helpers
+function getWorkingDays() {
+    const days = [];
+    if (!state.scheduleStartDate || !state.scheduleEndDate) return days;
+    
+    let current = new Date(state.scheduleStartDate + 'T00:00:00');
+    const end = new Date(state.scheduleEndDate + 'T00:00:00');
+    
+    while (current <= end) {
+        const dateStr = current.toISOString().split('T')[0];
+        const dayOfWeek = current.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6 && !state.closedDates.includes(dateStr)) {
+            days.push(dateStr);
+        }
+        current.setDate(current.getDate() + 1);
+    }
+    return days;
+}
+
+function formatDate(dateStr) {
+    const [year, month, day] = dateStr.split('-');
+    const date = new Date(year, month - 1, day);
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    return `${day}/${month} (${dayNames[date.getDay()]})`;
+}
+
+function isPersonUnavailable(person, dateStr) {
+    if (person.status === 'disponivel') return false;
+    
+    if (person.unavailabilityStart && person.unavailabilityEnd) {
+        return dateStr >= person.unavailabilityStart && dateStr <= person.unavailabilityEnd;
+    } else if (person.unavailabilityStart) {
+        return dateStr >= person.unavailabilityStart;
+    } else if (person.unavailabilityEnd) {
+        return dateStr <= person.unavailabilityEnd;
+    }
+    return true; // Unavailable indefinitely
+}
+
+function renderClosedDates() {
+    closedDatesList.innerHTML = state.closedDates.map(date => `
+        <div class="badge" style="background: var(--bg-card-hover); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; padding: 0.25rem 0.5rem;">
+            ${formatDate(date)}
+            <button onclick="removeClosedDate('${date}')" style="background: none; border: none; cursor: pointer; color: var(--danger); padding: 0; line-height: 1;"><i class="ph ph-x"></i></button>
+        </div>
+    `).join('');
+}
+
+function removeClosedDate(date) {
+    state.closedDates = state.closedDates.filter(d => d !== date);
+    saveState();
+    renderClosedDates();
+    renderScheduleBoard();
 }
 
 // Navigation
@@ -83,10 +166,59 @@ function setupEventListeners() {
     document.getElementById('form-person').addEventListener('submit', savePerson);
     document.getElementById('form-shift').addEventListener('submit', saveShift);
 
-    // AI Key
+    // Config
     aiApiKeyInput.addEventListener('change', (e) => {
         state.config.apiKey = e.target.value;
         saveState();
+    });
+
+    scheduleStartDateInput.addEventListener('change', (e) => {
+        state.scheduleStartDate = e.target.value;
+        saveState();
+        renderScheduleBoard();
+    });
+    scheduleEndDateInput.addEventListener('change', (e) => {
+        state.scheduleEndDate = e.target.value;
+        saveState();
+        renderScheduleBoard();
+    });
+
+    btnAddClosedDate.addEventListener('click', () => {
+        const date = inputClosedDate.value;
+        if (date && !state.closedDates.includes(date)) {
+            state.closedDates.push(date);
+            state.closedDates.sort();
+            saveState();
+            renderClosedDates();
+            renderScheduleBoard();
+        }
+        inputClosedDate.value = '';
+    });
+
+    btnFetchHolidays.addEventListener('click', async () => {
+        try {
+            const year = state.scheduleStartDate ? state.scheduleStartDate.split('-')[0] : new Date().getFullYear();
+            const res = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`);
+            const holidays = await res.json();
+            let added = 0;
+            holidays.forEach(h => {
+                if (!state.closedDates.includes(h.date)) {
+                    state.closedDates.push(h.date);
+                    added++;
+                }
+            });
+            if (added > 0) {
+                state.closedDates.sort();
+                saveState();
+                renderClosedDates();
+                renderScheduleBoard();
+                alert(`${added} feriados nacionais adicionados.`);
+            } else {
+                alert("Nenhum feriado novo para adicionar neste período.");
+            }
+        } catch(e) {
+            alert("Erro ao buscar feriados da BrasilAPI.");
+        }
     });
 
     // Actions
@@ -110,8 +242,13 @@ function renderPeople() {
                     <button class="delete-btn" onclick="deletePerson('${person.id}')"><i class="ph ph-trash"></i></button>
                 </div>
             </div>
-            <div class="card-meta">
+            <div class="card-meta" style="flex-wrap: wrap;">
                 <span class="badge ${person.status}">${person.status}</span>
+                ${person.status !== 'disponivel' && (person.unavailabilityStart || person.unavailabilityEnd) ? 
+                    `<span class="badge" style="background: var(--bg-card); border: 1px solid var(--border);">
+                        ${person.unavailabilityStart ? formatDate(person.unavailabilityStart) : '...'} - 
+                        ${person.unavailabilityEnd ? formatDate(person.unavailabilityEnd) : '...'}
+                    </span>` : ''}
                 <span>Máx: ${person.maxShifts} turnos</span>
             </div>
         `;
@@ -159,6 +296,9 @@ function openPersonModal(person = null) {
     document.getElementById('person-name').value = person ? person.name : '';
     document.getElementById('person-status').value = person ? person.status : 'disponivel';
     document.getElementById('person-max-shifts').value = person ? person.maxShifts : 5;
+    document.getElementById('person-unavailability-start').value = person ? (person.unavailabilityStart || '') : '';
+    document.getElementById('person-unavailability-end').value = person ? (person.unavailabilityEnd || '') : '';
+    document.getElementById('unavailability-dates').style.display = (person && person.status !== 'disponivel') ? 'block' : 'none';
 
     const checkboxes = document.querySelectorAll('input[name="pref-shifts"]');
     checkboxes.forEach(cb => {
@@ -177,6 +317,8 @@ function savePerson(e) {
         id: id || generateId(),
         name: document.getElementById('person-name').value,
         status: document.getElementById('person-status').value,
+        unavailabilityStart: document.getElementById('person-unavailability-start').value,
+        unavailabilityEnd: document.getElementById('person-unavailability-end').value,
         maxShifts: parseInt(document.getElementById('person-max-shifts').value),
         preferredShifts
     };
@@ -237,7 +379,7 @@ function saveShift(e) {
         state.shifts[index] = shiftData;
     } else {
         state.shifts.push(shiftData);
-        const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+        const days = getWorkingDays();
         days.forEach(d => state.schedule[`${shiftData.id}-${d}`] = []);
     }
 
@@ -256,7 +398,7 @@ function editShift(id) {
 function deleteShift(id) {
     if (confirm('Tem certeza que deseja remover este turno?')) {
         state.shifts = state.shifts.filter(s => s.id !== id);
-        const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+        const days = getWorkingDays();
         days.forEach(d => delete state.schedule[`${id}-${d}`]);
         saveState();
         renderShifts();
@@ -269,7 +411,7 @@ function renderScheduleBoard() {
     scheduleBoard.innerHTML = '';
 
     const sortables = [];
-    const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+    const days = getWorkingDays();
 
     const grid = document.createElement('div');
     grid.className = 'schedule-grid';
@@ -278,7 +420,7 @@ function renderScheduleBoard() {
     const headerRow = document.createElement('div');
     headerRow.className = 'grid-row header-row';
     headerRow.innerHTML = `<div class="grid-cell time-cell">Horários</div>` +
-        days.map(d => `<div class="grid-cell day-cell">${d}</div>`).join('');
+        days.map(d => `<div class="grid-cell day-cell">${formatDate(d)}</div>`).join('');
     grid.appendChild(headerRow);
 
     state.shifts.forEach((shift, index) => {
@@ -363,7 +505,7 @@ function validateSchedule() {
     });
 
     const personShiftCount = {};
-    const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+    const days = getWorkingDays();
     const personDays = {};
     const personSameDayErrors = new Set();
 
@@ -399,7 +541,7 @@ function validateSchedule() {
                 const person = state.people.find(p => p.id === pId);
 
                 if (person) {
-                    if (person.status !== 'disponivel') {
+                    if (isPersonUnavailable(person, day)) {
                         hasError = true;
                         highlightPerson(shift.id, day, pId, 'error-item');
                     }
@@ -481,7 +623,7 @@ async function generateSchedule() {
 }
 
 function runLocalGenerationAlgorithm() {
-    const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
+    const days = getWorkingDays();
 
     // Clear current schedule
     state.shifts.forEach(s => {
@@ -490,12 +632,12 @@ function runLocalGenerationAlgorithm() {
         });
     });
 
-    let availablePeople = state.people.filter(p => p.status === 'disponivel');
     const shuffle = (array) => array.sort(() => Math.random() - 0.5);
     const counts = {};
-    availablePeople.forEach(p => counts[p.id] = 0);
+    state.people.forEach(p => counts[p.id] = 0);
 
     days.forEach(day => {
+        let availablePeople = state.people.filter(p => !isPersonUnavailable(p, day));
         state.shifts.forEach(shift => {
             let needed = shift.capacity;
 
