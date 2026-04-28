@@ -60,7 +60,7 @@ function saveState() {
 function switchTab(tabId) {
     menuBtns.forEach(btn => btn.classList.remove('active'));
     document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-    
+
     panels.forEach(panel => panel.classList.add('hidden'));
     document.getElementById(`panel-${tabId}`).classList.remove('hidden');
 }
@@ -140,7 +140,7 @@ function renderShifts() {
         `;
         shiftsList.appendChild(card);
     });
-    
+
     // Update preferred shifts checkboxes in person modal
     const prefContainer = document.getElementById('person-preferred-shifts');
     prefContainer.innerHTML = state.shifts.map(shift => `
@@ -159,7 +159,7 @@ function openPersonModal(person = null) {
     document.getElementById('person-name').value = person ? person.name : '';
     document.getElementById('person-status').value = person ? person.status : 'disponivel';
     document.getElementById('person-max-shifts').value = person ? person.maxShifts : 5;
-    
+
     const checkboxes = document.querySelectorAll('input[name="pref-shifts"]');
     checkboxes.forEach(cb => {
         cb.checked = person ? person.preferredShifts.includes(cb.value) : true;
@@ -172,7 +172,7 @@ function savePerson(e) {
     e.preventDefault();
     const id = document.getElementById('person-id').value;
     const preferredShifts = Array.from(document.querySelectorAll('input[name="pref-shifts"]:checked')).map(cb => cb.value);
-    
+
     const personData = {
         id: id || generateId(),
         name: document.getElementById('person-name').value,
@@ -267,44 +267,43 @@ function deleteShift(id) {
 // Schedule Board
 function renderScheduleBoard() {
     scheduleBoard.innerHTML = '';
-    
+
     const sortables = [];
     const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
 
     const grid = document.createElement('div');
     grid.className = 'schedule-grid';
-    
+
     // Header row
     const headerRow = document.createElement('div');
     headerRow.className = 'grid-row header-row';
-    headerRow.innerHTML = `<div class="grid-cell time-cell">Horários</div>` + 
+    headerRow.innerHTML = `<div class="grid-cell time-cell">Horários</div>` +
         days.map(d => `<div class="grid-cell day-cell">${d}</div>`).join('');
     grid.appendChild(headerRow);
 
     state.shifts.forEach((shift, index) => {
         const row = document.createElement('div');
         row.className = `grid-row ${index % 2 === 0 ? 'even-row' : 'odd-row'}`;
-        
+
         let rowHTML = `
             <div class="grid-cell time-cell">
-                <div class="shift-name">${shift.name}</div>
                 <div class="shift-time">${shift.time}</div>
             </div>
         `;
         row.innerHTML = rowHTML;
-        
+
         days.forEach(day => {
             const dayKey = `${shift.id}-${day}`;
             if (!state.schedule[dayKey]) state.schedule[dayKey] = [];
-            
+
             const cell = document.createElement('div');
             cell.className = 'grid-cell dropzone-cell';
-            
+
             const dropzone = document.createElement('div');
             dropzone.className = 'shift-dropzone';
             dropzone.dataset.shiftId = shift.id;
             dropzone.dataset.day = day;
-            
+
             dropzone.innerHTML = state.schedule[dayKey].map(personId => {
                 const person = state.people.find(p => p.id === personId);
                 if (!person) return '';
@@ -315,14 +314,14 @@ function renderScheduleBoard() {
                     </div>
                 `;
             }).join('');
-            
+
             cell.appendChild(dropzone);
             row.appendChild(cell);
         });
-        
+
         grid.appendChild(row);
     });
-    
+
     scheduleBoard.appendChild(grid);
 
     document.querySelectorAll('.shift-dropzone').forEach(dropzone => {
@@ -364,12 +363,12 @@ function validateSchedule() {
 
     const personShiftCount = {};
     const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
-    
+
     state.shifts.forEach(shift => {
         days.forEach(day => {
             const dayKey = `${shift.id}-${day}`;
             const scheduledIds = state.schedule[dayKey] || [];
-            
+
             if (scheduledIds.length > shift.capacity || (scheduledIds.length > 0 && scheduledIds.length < shift.capacity)) {
                 hasWarning = true;
             }
@@ -377,13 +376,13 @@ function validateSchedule() {
             scheduledIds.forEach(pId => {
                 personShiftCount[pId] = (personShiftCount[pId] || 0) + 1;
                 const person = state.people.find(p => p.id === pId);
-                
+
                 if (person) {
                     if (person.status !== 'disponivel') {
                         hasError = true;
                         highlightPerson(shift.id, day, pId, 'error-item');
                     }
-                    
+
                     if (person.preferredShifts.length > 0 && !person.preferredShifts.includes(shift.id)) {
                         hasWarning = true;
                         highlightPerson(shift.id, day, pId, 'conflict-item');
@@ -399,7 +398,7 @@ function validateSchedule() {
             hasError = true;
             state.shifts.forEach(s => {
                 days.forEach(d => {
-                    if((state.schedule[`${s.id}-${d}`] || []).includes(pId)) highlightPerson(s.id, d, pId, 'error-item');
+                    if ((state.schedule[`${s.id}-${d}`] || []).includes(pId)) highlightPerson(s.id, d, pId, 'error-item');
                 });
             });
         }
@@ -417,9 +416,9 @@ function validateSchedule() {
 
 function highlightPerson(shiftId, day, personId, className) {
     const dz = document.querySelector(`.shift-dropzone[data-shift-id="${shiftId}"][data-day="${day}"]`);
-    if(dz) {
+    if (dz) {
         const el = dz.querySelector(`.scheduled-person[data-person-id="${personId}"]`);
-        if(el) el.classList.add(className);
+        if (el) el.classList.add(className);
     }
 }
 
@@ -444,7 +443,7 @@ async function generateSchedule() {
             await new Promise(r => setTimeout(r, 1000)); // Simulate delay for effect
             runLocalGenerationAlgorithm();
         }
-        
+
         saveState();
         renderScheduleBoard();
     } catch (e) {
@@ -457,14 +456,14 @@ async function generateSchedule() {
 
 function runLocalGenerationAlgorithm() {
     const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
-    
+
     // Clear current schedule
     state.shifts.forEach(s => {
         days.forEach(d => {
             state.schedule[`${s.id}-${d}`] = [];
         });
     });
-    
+
     let availablePeople = state.people.filter(p => p.status === 'disponivel');
     const shuffle = (array) => array.sort(() => Math.random() - 0.5);
     const counts = {};
@@ -473,19 +472,19 @@ function runLocalGenerationAlgorithm() {
     days.forEach(day => {
         state.shifts.forEach(shift => {
             let needed = shift.capacity;
-            
-            let candidates = availablePeople.filter(p => 
+
+            let candidates = availablePeople.filter(p =>
                 (p.preferredShifts.length === 0 || p.preferredShifts.includes(shift.id)) &&
                 counts[p.id] < p.maxShifts
             );
-            
+
             const workingToday = [];
             state.shifts.forEach(s => {
                 workingToday.push(...(state.schedule[`${s.id}-${day}`] || []));
             });
 
             candidates = candidates.filter(p => !workingToday.includes(p.id));
-            
+
             candidates = shuffle(candidates);
             candidates.sort((a, b) => counts[a.id] - counts[b.id]);
 
