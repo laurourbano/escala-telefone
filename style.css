@@ -601,3 +601,97 @@ body {
     color: var(--danger);
     font-size: 1.2rem;
 }
+
+/* --- PRINT STYLES (EXCEL-LIKE TABLE) --- */
+@media print {
+    body {
+        background: white;
+        color: black;
+        height: auto;
+        overflow: visible;
+    }
+
+    .app-container {
+        height: auto;
+        display: block;
+    }
+
+    .sidebar, .panel, .schedule-header, .actions {
+        display: none !important;
+    }
+
+    .main-content {
+        display: block;
+        overflow: visible;
+    }
+
+    .schedule-view {
+        background: none;
+        display: block;
+        width: 100%;
+    }
+
+    .schedule-board {
+        padding: 0;
+        display: flex;
+        flex-direction: row;
+        gap: 0;
+        width: 100%;
+        border: 2px solid black;
+        overflow: visible;
+    }
+
+    .shift-column {
+        flex: 1;
+        border: none;
+        border-right: 1px solid black;
+        border-radius: 0;
+        background: none;
+    }
+
+    .shift-column:last-child {
+        border-right: none;
+    }
+
+    .shift-column-header {
+        background: #f0f0f0 !important;
+        border-bottom: 2px solid black;
+        padding: 0.5rem;
+        text-align: center;
+        color: black;
+    }
+
+    .shift-column-title {
+        font-weight: bold;
+        color: black;
+    }
+
+    .shift-column-meta {
+        color: #333;
+    }
+
+    .shift-dropzone {
+        padding: 0;
+        display: block;
+        min-height: auto;
+    }
+
+    .scheduled-person {
+        background: none;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        border-radius: 0;
+        padding: 0.5rem;
+        box-shadow: none;
+        color: black;
+        text-align: center;
+    }
+
+    .scheduled-person:last-child {
+        border-bottom: none;
+    }
+
+    .scheduled-person i {
+        display: none;
+    }
+}
