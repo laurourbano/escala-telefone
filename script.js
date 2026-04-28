@@ -287,7 +287,8 @@ function renderScheduleBoard() {
 
         let rowHTML = `
             <div class="grid-cell time-cell">
-                <div class="shift-time">${shift.time}</div>
+                <span class="shift-name"><i class="ph ph-phone-incoming"></i> ${shift.name}</span>
+                <span class="shift-time"><i class="ph ph-clock"></i> ${shift.time}</span>
             </div>
         `;
         row.innerHTML = rowHTML;
@@ -371,11 +372,11 @@ function validateSchedule() {
         days.forEach(day => {
             const dayKey = `${shift.id}-${day}`;
             const scheduledIds = state.schedule[dayKey] || [];
-            
+
             scheduledIds.forEach(pId => {
                 if (!personDays[pId]) personDays[pId] = [];
                 personDays[pId].push(day);
-                
+
                 const occurrences = personDays[pId].filter(d => d === day).length;
                 if (occurrences > 1) {
                     personSameDayErrors.add(`${pId}-${day}`);

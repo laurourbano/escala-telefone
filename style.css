@@ -134,7 +134,7 @@ body {
 
 .menu-btn:hover {
     background-color: rgba(255, 255, 255, 0.05);
-    color: var(--text-main);
+    color: var(--primary);
 }
 
 .menu-btn.active {
@@ -477,6 +477,12 @@ body {
 
 .header-row .time-cell {
     background-color: transparent;
+}
+
+.shift-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary);
 }
 
 .day-cell {
