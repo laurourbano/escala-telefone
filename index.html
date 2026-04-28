@@ -21,7 +21,8 @@
             </div>
             
             <nav class="menu">
-                <button class="menu-btn active" data-tab="pessoas"><i class="ph ph-users"></i> Pessoas</button>
+                <button class="menu-btn active" data-tab="escala"><i class="ph ph-calendar-blank"></i> Escala</button>
+                <button class="menu-btn" data-tab="pessoas"><i class="ph ph-users"></i> Pessoas</button>
                 <button class="menu-btn" data-tab="horarios"><i class="ph ph-clock"></i> Horários</button>
                 <button class="menu-btn" data-tab="config"><i class="ph ph-gear"></i> Config. IA</button>
             </nav>
@@ -35,7 +36,7 @@
         <!-- Main Content -->
         <main class="main-content">
             <!-- Panels (Hidden by default except one) -->
-            <section id="panel-pessoas" class="panel active">
+            <section id="panel-pessoas" class="panel hidden">
                 <div class="panel-header">
                     <h3>Gerenciar Equipe</h3>
                     <button id="btn-add-person" class="icon-btn"><i class="ph ph-plus"></i> Nova Pessoa</button>
@@ -68,8 +69,8 @@
                 </div>
             </section>
 
-            <!-- Schedule View (Always visible on the right or below panels depending on layout) -->
-            <section class="schedule-view">
+            <!-- Schedule View -->
+            <section id="panel-escala" class="panel active schedule-view">
                 <div class="schedule-header">
                     <h3>Escala Atual</h3>
                     <div class="validation-status" id="validation-status">
