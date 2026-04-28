@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escala Inteligente</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for beautiful icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- SortableJS for smooth drag and drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="ph ph-calendar-check"></i>
+                <h2>Escala AI</h2>
+            </div>
+            
+            <nav class="menu">
+                <button class="menu-btn active" data-tab="pessoas"><i class="ph ph-users"></i> Pessoas</button>
+                <button class="menu-btn" data-tab="horarios"><i class="ph ph-clock"></i> Horários</button>
+                <button class="menu-btn" data-tab="config"><i class="ph ph-gear"></i> Config. IA</button>
+            </nav>
+
+            <div class="actions">
+                <button id="btn-generate" class="primary-btn"><i class="ph ph-magic-wand"></i> Gerar Escala com IA</button>
+                <button id="btn-export" class="secondary-btn"><i class="ph ph-export"></i> Exportar</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Panels (Hidden by default except one) -->
+            <section id="panel-pessoas" class="panel active">
+                <div class="panel-header">
+                    <h3>Gerenciar Equipe</h3>
+                    <button id="btn-add-person" class="icon-btn"><i class="ph ph-plus"></i> Nova Pessoa</button>
+                </div>
+                <div class="people-list" id="people-list">
+                    <!-- People cards will be rendered here -->
+                </div>
+            </section>
+
+            <section id="panel-horarios" class="panel hidden">
+                <div class="panel-header">
+                    <h3>Turnos e Horários</h3>
+                    <button id="btn-add-shift" class="icon-btn"><i class="ph ph-plus"></i> Novo Turno</button>
+                </div>
+                <div class="shifts-list" id="shifts-list">
+                    <!-- Shift cards will be rendered here -->
+                </div>
+            </section>
+
+            <section id="panel-config" class="panel hidden">
+                <div class="panel-header">
+                    <h3>Configurações de IA</h3>
+                </div>
+                <div class="config-form">
+                    <div class="form-group">
+                        <label for="ai-api-key">Chave da API (Google Gemini)</label>
+                        <input type="password" id="ai-api-key" placeholder="Cole sua API Key aqui...">
+                        <small>A chave fica salva apenas no seu navegador.</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Schedule View (Always visible on the right or below panels depending on layout) -->
+            <section class="schedule-view">
+                <div class="schedule-header">
+                    <h3>Escala Atual</h3>
+                    <div class="validation-status" id="validation-status">
+                        <span class="status-badge success"><i class="ph ph-check-circle"></i> Equilibrado</span>
+                    </div>
+                </div>
+                
+                <div class="schedule-board" id="schedule-board">
+                    <!-- Shifts will be rendered as columns here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modal-person">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-person-title">Adicionar Pessoa</h3>
+                <button class="close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-person">
+                    <input type="hidden" id="person-id">
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" id="person-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="person-status">
+                            <option value="disponivel">Disponível</option>
+                            <option value="folga">Folga</option>
+                            <option value="ferias">Férias</option>
+                            <option value="atestado">Atestado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Máximo de Turnos</label>
+                        <input type="number" id="person-max-shifts" value="5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Turnos Preferenciais</label>
+                        <div id="person-preferred-shifts" class="checkbox-group">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <button type="submit" class="primary-btn w-full">Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-shift">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-shift-title">Adicionar Turno</h3>
+                <button class="close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-shift">
+                    <input type="hidden" id="shift-id">
+                    <div class="form-group">
+                        <label>Nome do Turno</label>
+                        <input type="text" id="shift-name" placeholder="Ex: Manhã" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Horário</label>
+                        <input type="text" id="shift-time" placeholder="Ex: 08:00 - 14:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Vagas Necessárias</label>
+                        <input type="number" id="shift-capacity" value="2" min="1" required>
+                    </div>
+                    <button type="submit" class="primary-btn w-full">Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay for AI -->
+    <div class="loading-overlay hidden" id="ai-loading">
+        <div class="spinner"></div>
+        <p>A IA está organizando a escala de forma justa...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
