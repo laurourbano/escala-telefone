@@ -92,15 +92,39 @@ function getWorkingDays() {
     let current = new Date(state.scheduleStartDate + 'T00:00:00');
     const end = new Date(state.scheduleEndDate + 'T00:00:00');
     
-    while (current <= end) {
+    if (isNaN(current.getTime()) || isNaN(end.getTime())) return days;
+    if (current > end) return days; // Evita loop ou processamento se início for após fim
+
+    let iterations = 0;
+    while (current <= end && iterations < 62) { // Limite de 2 meses para segurança
         const dateStr = current.toISOString().split('T')[0];
         const dayOfWeek = current.getDay();
         if (dayOfWeek !== 0 && dayOfWeek !== 6 && !state.closedDates.includes(dateStr)) {
             days.push(dateStr);
         }
         current.setDate(current.getDate() + 1);
+        iterations++;
     }
     return days;
+}
+
+function calculateDefaultEndDate(startDateStr) {
+    let date = new Date(startDateStr + 'T00:00:00');
+    if (isNaN(date.getTime())) return '';
+    
+    let count = 0;
+    let current = new Date(date);
+    
+    // Queremos 5 dias úteis incluindo o dia de início se for útil
+    while (count < 5) {
+        if (current.getDay() !== 0 && current.getDay() !== 6) {
+            count++;
+        }
+        if (count < 5) {
+            current.setDate(current.getDate() + 1);
+        }
+    }
+    return current.toISOString().split('T')[0];
 }
 
 function formatDate(dateStr) {
@@ -173,14 +197,32 @@ function setupEventListeners() {
     });
 
     scheduleStartDateInput.addEventListener('change', (e) => {
-        state.scheduleStartDate = e.target.value;
-        saveState();
-        renderScheduleBoard();
+        const newDate = e.target.value;
+        if (newDate) {
+            state.scheduleStartDate = newDate;
+            
+            // Sugere data final (5 dias úteis depois)
+            const defaultEnd = calculateDefaultEndDate(newDate);
+            state.scheduleEndDate = defaultEnd;
+            scheduleEndDateInput.value = defaultEnd;
+            
+            saveState();
+            renderScheduleBoard();
+        }
     });
+
     scheduleEndDateInput.addEventListener('change', (e) => {
-        state.scheduleEndDate = e.target.value;
-        saveState();
-        renderScheduleBoard();
+        const newEnd = e.target.value;
+        if (newEnd) {
+            if (state.scheduleStartDate && newEnd < state.scheduleStartDate) {
+                alert("A data final não pode ser anterior à data inicial.");
+                scheduleEndDateInput.value = state.scheduleEndDate;
+                return;
+            }
+            state.scheduleEndDate = newEnd;
+            saveState();
+            renderScheduleBoard();
+        }
     });
 
     btnAddClosedDate.addEventListener('click', () => {
