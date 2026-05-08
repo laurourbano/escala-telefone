@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Phosphor Icons for beautiful icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
     <!-- SortableJS for smooth drag and drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 </head>
@@ -19,6 +19,10 @@
             <span>EscalAI</span>
         </div>
         <div class="topbar-actions" id="topbar-user-actions" style="margin-left: auto; display: none;">
+            <button id="btn-notifications" class="icon-btn" style="position: relative; margin-right: 1rem;">
+                <i class="ph ph-bell"></i>
+                <span id="notification-badge" class="badge-count hidden">0</span>
+            </button>
             <button id="btn-profile" class="profile-btn">
                 <i class="ph ph-user-circle"></i>
                 <span id="display-user-name">Usuário</span>
@@ -32,19 +36,24 @@
     </header>
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-toggle-container">
+                <button id="btn-toggle-sidebar" class="sidebar-toggle" title="Alternar Menu">
+                    <i class="ph ph-list"></i>
+                </button>
+            </div>
             
             <nav class="menu">
-                <button class="menu-btn active" data-tab="escala"><i class="ph ph-calendar-blank"></i> Escala</button>
-                <button class="menu-btn" data-tab="pessoas"><i class="ph ph-users"></i> Pessoas</button>
-                <button class="menu-btn" data-tab="horarios"><i class="ph ph-clock"></i> Horários</button>
-                <button class="menu-btn" data-tab="config"><i class="ph ph-gear"></i> Config. IA</button>
-                <button class="menu-btn" data-tab="minha-escala"><i class="ph ph-user-focus"></i> Minha Escala</button>
+                <button class="menu-btn active" data-tab="escala"><i class="ph ph-calendar-blank"></i> <span>Escala</span></button>
+                <button class="menu-btn" data-tab="pessoas"><i class="ph ph-users"></i> <span>Pessoas</span></button>
+                <button class="menu-btn" data-tab="horarios"><i class="ph ph-clock"></i> <span>Horários</span></button>
+                <button class="menu-btn" data-tab="config"><i class="ph ph-gear"></i> <span>Config. IA</span></button>
+                <button class="menu-btn" data-tab="minha-escala"><i class="ph ph-user-focus"></i> <span>Minha Escala</span></button>
             </nav>
 
             <div class="actions">
-                <button id="btn-generate" class="primary-btn"><i class="ph ph-magic-wand"></i> Gerar Escala com IA</button>
-                <button id="btn-export" class="secondary-btn"><i class="ph ph-export"></i> Exportar</button>
+                <button id="btn-generate" class="primary-btn"><i class="ph ph-magic-wand"></i> <span>Gerar Escala com IA</span></button>
+                <button id="btn-export" class="secondary-btn"><i class="ph ph-export"></i> <span>Exportar</span></button>
             </div>
         </aside>
 
@@ -184,7 +193,14 @@
                         <input type="number" id="person-max-shifts" value="5" min="1">
                     </div>
                     <div class="form-group">
-                        <label>Turnos Preferenciais</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <label style="margin-bottom: 0;">Turnos Preferenciais</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" id="btn-select-all-shifts" style="font-size: 0.7rem; color: var(--primary); background: transparent; border: none; cursor: pointer; padding: 0;">Marcar Todos</button>
+                                <span style="color: var(--border); font-size: 0.7rem;">|</span>
+                                <button type="button" id="btn-deselect-all-shifts" style="font-size: 0.7rem; color: var(--danger); background: transparent; border: none; cursor: pointer; padding: 0;">Desmarcar Todos</button>
+                            </div>
+                        </div>
                         <div id="person-preferred-shifts" class="checkbox-group">
                             <!-- Populated dynamically -->
                         </div>
@@ -218,6 +234,59 @@
                     </div>
                     <button type="submit" class="primary-btn w-full">Salvar</button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Swap Modal -->
+    <div class="modal-overlay" id="modal-swap">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Solicitar Troca de Turno</h3>
+                <button class="close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-swap">
+                    <input type="hidden" id="swap-my-shift-id">
+                    <input type="hidden" id="swap-my-date">
+                    
+                    <div class="form-group">
+                        <label>Meu Turno Selecionado</label>
+                        <p id="swap-my-details" style="font-size: 0.9rem; color: var(--text-muted);"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Com quem deseja trocar?</label>
+                        <select id="swap-target-person" required>
+                            <option value="">Selecione um colega...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pelo turno dele em:</label>
+                        <select id="swap-target-shift" required disabled>
+                            <option value="">Selecione o turno do colega...</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="primary-btn w-full">Enviar Solicitação</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div class="modal-overlay" id="modal-notifications">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Minhas Notificações</h3>
+                <button class="close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body" id="notifications-list-container">
+                <!-- Populated dynamically -->
+                <div class="empty-state">
+                    <p>Não há novas notificações.</p>
+                </div>
             </div>
         </div>
     </div>

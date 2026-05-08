@@ -1,4 +1,50 @@
-// State Management
+/**
+ * @typedef {Object} Person
+ * @property {string} id
+ * @property {string} name
+ * @property {string} status
+ * @property {number} maxShifts
+ * @property {string[]} preferredShifts
+ * @property {string} password
+ * @property {string} [unavailabilityStart]
+ * @property {string} [unavailabilityEnd]
+ */
+
+/**
+ * @typedef {Object} Shift
+ * @property {string} id
+ * @property {string} name
+ * @property {string} time
+ * @property {number} capacity
+ */
+
+/**
+ * @typedef {Object} Notification
+ * @property {string} id
+ * @property {string} fromId
+ * @property {string} fromName
+ * @property {string} toId
+ * @property {string} myShiftId
+ * @property {string} myDate
+ * @property {string} targetShiftId
+ * @property {string} targetDate
+ * @property {string} status
+ * @property {string} timestamp
+ */
+
+/**
+ * @type {{
+ *  people: Person[],
+ *  shifts: Shift[],
+ *  schedule: Object.<string, string[]>,
+ *  config: { apiKey: string },
+ *  scheduleStartDate: string,
+ *  scheduleEndDate: string,
+ *  closedDates: string[],
+ *  currentUser: Person | null,
+ *  notifications: Notification[]
+ * }}
+ */
 let state = {
     people: JSON.parse(localStorage.getItem('escala_people')) || [],
     shifts: JSON.parse(localStorage.getItem('escala_shifts')) || [],
@@ -7,12 +53,13 @@ let state = {
     scheduleStartDate: localStorage.getItem('escala_start_date') || '',
     scheduleEndDate: localStorage.getItem('escala_end_date') || '',
     closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || [],
-    currentUser: JSON.parse(localStorage.getItem('escala_current_user')) || null
+    currentUser: JSON.parse(localStorage.getItem('escala_current_user')) || null,
+    notifications: JSON.parse(localStorage.getItem('escala_notifications')) || []
 };
 
 // Ensure all people have a password (default 3820)
-state.people.forEach(p => {
-    if (!p.password) p.password = '3820';
+state.people.forEach(person => {
+    if (!person.password) person.password = '3820';
 });
 saveState();
 
@@ -39,7 +86,7 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 
 // DOM Elements
 const panels = document.querySelectorAll('.panel');
-const menuBtns = document.querySelectorAll('.menu-btn');
+const menuButtons = document.querySelectorAll('.menu-btn');
 const peopleList = document.getElementById('people-list');
 const shiftsList = document.getElementById('shifts-list');
 const scheduleBoard = document.getElementById('schedule-board');
@@ -55,6 +102,16 @@ const closedDatesList = document.getElementById('closed-dates-list');
 // Initialize
 function init() {
     sortShifts(); // Guarantee shifts are sorted initially
+    
+    // Ensure all names are capitalized (Title Case) and apply defaults
+    state.people.forEach(person => {
+        if (person.name) person.name = toTitleCase(person.name);
+        if (person.maxShifts === undefined || isNaN(person.maxShifts)) person.maxShifts = 5;
+        if (!person.preferredShifts || person.preferredShifts.length === 0) {
+            person.preferredShifts = state.shifts.map(shift => shift.id);
+        }
+    });
+    
     renderPeople();
     renderShifts();
     
@@ -74,7 +131,17 @@ function checkAuth() {
     if (state.currentUser) {
         document.getElementById('login-overlay').classList.remove('active');
         document.getElementById('topbar-user-actions').style.display = 'flex';
-        document.getElementById('display-user-name').innerText = state.currentUser.name;
+        document.getElementById('display-user-name').innerText = getFirstName(state.currentUser.name);
+        
+        // Admin visibility
+        const adminTabs = document.querySelectorAll('[data-tab="pessoas"], [data-tab="horarios"], [data-tab="config"]');
+        if (isAdmin()) {
+            adminTabs.forEach(tab => tab.classList.remove('hidden-admin'));
+        } else {
+            adminTabs.forEach(tab => tab.classList.add('hidden-admin'));
+        }
+        
+        updateNotificationBadge();
     } else {
         document.getElementById('login-overlay').classList.add('active');
         document.getElementById('topbar-user-actions').style.display = 'none';
@@ -83,14 +150,29 @@ function checkAuth() {
 
 // Sort shifts by start time and name
 function sortShifts() {
-    state.shifts.sort((a, b) => {
-        const timeA = (a.time.match(/\d{2}:\d{2}/) || ['24:00'])[0];
-        const timeB = (b.time.match(/\d{2}:\d{2}/) || ['24:00'])[0];
+    state.shifts.sort((shiftA, shiftB) => {
+        const timeA = (shiftA.time.match(/\d{2}:\d{2}/) || ['24:00'])[0];
+        const timeB = (shiftB.time.match(/\d{2}:\d{2}/) || ['24:00'])[0];
         if (timeA === timeB) {
-            return a.name.localeCompare(b.name);
+            return shiftA.name.localeCompare(shiftB.name);
         }
         return timeA.localeCompare(timeB);
     });
+}
+
+function isAdmin() {
+    if (!state.currentUser) return false;
+    return generateEmail(state.currentUser.name) === 'lauro.urbano@crf-pr.org.br';
+}
+
+function toTitleCase(text) {
+    if (!text) return '';
+    return text.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+function getFirstName(name) {
+    if (!name) return '';
+    return name.split(' ')[0];
 }
 
 // Persist State
@@ -148,6 +230,14 @@ function calculateDefaultEndDate(startDateStr) {
     return current.toISOString().split('T')[0];
 }
 
+function toTitleCase(text) {
+    if (!text) return '';
+    return text.toLowerCase().split(/\s+/).map(word => {
+        if (word.length === 0) return '';
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
+}
+
 function formatDate(dateStr) {
     const [year, month, day] = dateStr.split('-');
     const date = new Date(year, month - 1, day);
@@ -156,15 +246,15 @@ function formatDate(dateStr) {
 }
 
 function generateEmail(name) {
-    const parts = name.toLowerCase()
+    const emailParts = name.toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
         .trim()
         .split(/\s+/);
     
-    if (parts.length > 1) {
-        return `${parts[0]}.${parts[parts.length - 1]}@crf-pr.org.br`;
+    if (emailParts.length > 1) {
+        return `${emailParts[0]}.${emailParts[emailParts.length - 1]}@crf-pr.org.br`;
     }
-    return `${parts[0]}@crf-pr.org.br`;
+    return `${emailParts[0]}@crf-pr.org.br`;
 }
 
 function isPersonUnavailable(person, dateStr) {
@@ -190,7 +280,7 @@ function renderClosedDates() {
 }
 
 function removeClosedDate(date) {
-    state.closedDates = state.closedDates.filter(d => d !== date);
+    state.closedDates = state.closedDates.filter(closedDate => closedDate !== date);
     saveState();
     renderClosedDates();
     renderScheduleBoard();
@@ -198,9 +288,9 @@ function removeClosedDate(date) {
 
 // Navigation
 function switchTab(tabId) {
-    menuBtns.forEach(btn => btn.classList.remove('active'));
+    menuButtons.forEach(button => button.classList.remove('active'));
     document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-
+ 
     panels.forEach(panel => panel.classList.add('hidden'));
     document.getElementById(`panel-${tabId}`).classList.remove('hidden');
 
@@ -217,15 +307,55 @@ function switchTab(tabId) {
 // Event Listeners
 function setupEventListeners() {
     // Menu
-    menuBtns.forEach(btn => {
-        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    menuButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            switchTab(button.dataset.tab);
+            // Optionally close sidebar on mobile after selection
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.remove('expanded');
+            }
+        });
     });
+
+    const toggleButton = document.getElementById('btn-toggle-sidebar');
+    if (toggleButton) {
+        toggleButton.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('expanded');
+        });
+    }
+
+    // Person Modal Select/Deselect All
+    const buttonSelectAll = document.getElementById('btn-select-all-shifts');
+    const buttonDeselectAll = document.getElementById('btn-deselect-all-shifts');
+
+    if (buttonSelectAll) {
+        buttonSelectAll.addEventListener('click', () => {
+            document.querySelectorAll('input[name="pref-shifts"]').forEach(checkbox => checkbox.checked = true);
+        });
+    }
+
+    if (buttonDeselectAll) {
+        buttonDeselectAll.addEventListener('click', () => {
+            document.querySelectorAll('input[name="pref-shifts"]').forEach(checkbox => checkbox.checked = false);
+        });
+    }
+
+    document.getElementById('btn-notifications').addEventListener('click', () => {
+        renderNotifications();
+        document.getElementById('modal-notifications').classList.add('active');
+    });
+
+    document.getElementById('swap-target-person').addEventListener('change', (event) => {
+        updateSwapTargetShifts(event.target.value);
+    });
+
+    document.getElementById('form-swap').addEventListener('submit', handleSwapRequest);
 
     // Modals
     document.getElementById('btn-add-person').addEventListener('click', () => openPersonModal());
     document.getElementById('btn-add-shift').addEventListener('click', () => openShiftModal());
-    document.querySelectorAll('.close-modal').forEach(btn => {
-        btn.addEventListener('click', (e) => e.target.closest('.modal-overlay').classList.remove('active'));
+    document.querySelectorAll('.close-modal').forEach(button => {
+        button.addEventListener('click', (event) => event.target.closest('.modal-overlay').classList.remove('active'));
     });
 
     // Forms
@@ -282,12 +412,12 @@ function setupEventListeners() {
     btnFetchHolidays.addEventListener('click', async () => {
         try {
             const year = state.scheduleStartDate ? state.scheduleStartDate.split('-')[0] : new Date().getFullYear();
-            const res = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`);
-            const holidays = await res.json();
+            const response = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`);
+            const holidays = await response.json();
             let added = 0;
-            holidays.forEach(h => {
-                if (!state.closedDates.includes(h.date)) {
-                    state.closedDates.push(h.date);
+            holidays.forEach(holiday => {
+                if (!state.closedDates.includes(holiday.date)) {
+                    state.closedDates.push(holiday.date);
                     added++;
                 }
             });
@@ -300,7 +430,7 @@ function setupEventListeners() {
             } else {
                 alert("Nenhum feriado novo para adicionar neste período.");
             }
-        } catch(e) {
+        } catch(error) {
             alert("Erro ao buscar feriados da BrasilAPI.");
         }
     });
@@ -333,11 +463,11 @@ function setupEventListeners() {
     document.getElementById('btn-open-change-pw').addEventListener('click', openChangePasswordModal);
     document.getElementById('form-change-password').addEventListener('submit', handleChangePassword);
     
-    document.querySelectorAll('.toggle-password').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetId = btn.dataset.target;
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', () => {
+            const targetId = button.dataset.target;
             const input = document.getElementById(targetId);
-            const icon = btn.querySelector('i');
+            const icon = button.querySelector('i');
             if (input.type === 'password') {
                 input.type = 'text';
                 icon.className = 'ph ph-eye-slash';
@@ -364,7 +494,7 @@ function renderPeople() {
         card.className = 'card';
         card.innerHTML = `
             <div class="card-header">
-                <span class="card-title">${person.name}</span>
+                <span class="card-title">${getFirstName(person.name)}</span>
                 <div class="card-actions">
                     <button onclick="editPerson('${person.id}')"><i class="ph ph-pencil"></i></button>
                     <button class="delete-btn" onclick="deletePerson('${person.id}')"><i class="ph ph-trash"></i></button>
@@ -430,31 +560,31 @@ function openPersonModal(person = null) {
     document.getElementById('unavailability-dates').style.display = (person && person.status !== 'disponivel') ? 'block' : 'none';
 
     const checkboxes = document.querySelectorAll('input[name="pref-shifts"]');
-    checkboxes.forEach(cb => {
-        cb.checked = person ? person.preferredShifts.includes(cb.value) : true;
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = person ? person.preferredShifts.includes(checkbox.value) : true;
     });
 
     modal.classList.add('active');
 }
 
-function savePerson(e) {
-    e.preventDefault();
+function savePerson(event) {
+    event.preventDefault();
     const id = document.getElementById('person-id').value;
-    const preferredShifts = Array.from(document.querySelectorAll('input[name="pref-shifts"]:checked')).map(cb => cb.value);
+    const preferredShifts = Array.from(document.querySelectorAll('input[name="pref-shifts"]:checked')).map(checkbox => checkbox.value);
 
     const personData = {
         id: id || generateId(),
-        name: document.getElementById('person-name').value,
+        name: toTitleCase(document.getElementById('person-name').value.trim()),
         status: document.getElementById('person-status').value,
         unavailabilityStart: document.getElementById('person-unavailability-start').value,
         unavailabilityEnd: document.getElementById('person-unavailability-end').value,
         maxShifts: parseInt(document.getElementById('person-max-shifts').value),
         preferredShifts,
-        password: id ? (state.people.find(p => p.id === id).password || '3820') : '3820'
+        password: id ? (state.people.find(person => person.id === id).password || '3820') : '3820'
     };
 
     if (id) {
-        const index = state.people.findIndex(p => p.id === id);
+        const index = state.people.findIndex(person => person.id === id);
         state.people[index] = personData;
     } else {
         state.people.push(personData);
@@ -466,16 +596,16 @@ function savePerson(e) {
 }
 
 function editPerson(id) {
-    const person = state.people.find(p => p.id === id);
+    const person = state.people.find(person => person.id === id);
     if (person) openPersonModal(person);
 }
 
 function deletePerson(id) {
     if (confirm('Tem certeza que deseja remover esta pessoa?')) {
-        state.people = state.people.filter(p => p.id !== id);
+        state.people = state.people.filter(person => person.id !== id);
         // Remove from schedule
         for (let shiftId in state.schedule) {
-            state.schedule[shiftId] = state.schedule[shiftId].filter(pId => pId !== id);
+            state.schedule[shiftId] = state.schedule[shiftId].filter(personId => personId !== id);
         }
         saveState();
         renderPeople();
@@ -494,8 +624,8 @@ function openShiftModal(shift = null) {
     modal.classList.add('active');
 }
 
-function saveShift(e) {
-    e.preventDefault();
+function saveShift(event) {
+    event.preventDefault();
     const id = document.getElementById('shift-id').value;
     const shiftData = {
         id: id || generateId(),
@@ -505,12 +635,12 @@ function saveShift(e) {
     };
 
     if (id) {
-        const index = state.shifts.findIndex(s => s.id === id);
+        const index = state.shifts.findIndex(shift => shift.id === id);
         state.shifts[index] = shiftData;
     } else {
         state.shifts.push(shiftData);
         const days = getWorkingDays();
-        days.forEach(d => state.schedule[`${shiftData.id}-${d}`] = []);
+        days.forEach(day => state.schedule[`${shiftData.id}-${day}`] = []);
     }
 
     sortShifts();
@@ -521,15 +651,15 @@ function saveShift(e) {
 }
 
 function editShift(id) {
-    const shift = state.shifts.find(s => s.id === id);
+    const shift = state.shifts.find(shift => shift.id === id);
     if (shift) openShiftModal(shift);
 }
 
 function deleteShift(id) {
     if (confirm('Tem certeza que deseja remover este turno?')) {
-        state.shifts = state.shifts.filter(s => s.id !== id);
+        state.shifts = state.shifts.filter(shift => shift.id !== id);
         const days = getWorkingDays();
-        days.forEach(d => delete state.schedule[`${id}-${d}`]);
+        days.forEach(day => delete state.schedule[`${id}-${day}`]);
         saveState();
         renderShifts();
         renderScheduleBoard();
@@ -550,7 +680,7 @@ function renderScheduleBoard() {
     const headerRow = document.createElement('div');
     headerRow.className = 'grid-row header-row';
     headerRow.innerHTML = `<div class="grid-cell time-cell">Horários</div>` +
-        days.map(d => `<div class="grid-cell day-cell">${formatDate(d)}</div>`).join('');
+        days.map(day => `<div class="grid-cell day-cell">${formatDate(day)}</div>`).join('');
     grid.appendChild(headerRow);
 
     state.shifts.forEach((shift, index) => {
@@ -578,11 +708,11 @@ function renderScheduleBoard() {
             dropzone.dataset.day = day;
 
             dropzone.innerHTML = state.schedule[dayKey].map(personId => {
-                const person = state.people.find(p => p.id === personId);
+                const person = state.people.find(person => person.id === personId);
                 if (!person) return '';
                 return `
                     <div class="scheduled-person" data-person-id="${person.id}">
-                        <span class="name">${person.name}</span>
+                        <span class="name">${getFirstName(person.name)}</span>
                         <i class="ph ph-dots-six-vertical text-muted"></i>
                     </div>
                 `;
@@ -603,7 +733,7 @@ function renderScheduleBoard() {
             animation: 150,
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag',
-            onEnd: function (evt) {
+            onEnd: function (event) {
                 updateScheduleFromDOM();
             }
         }));
@@ -614,11 +744,11 @@ function renderScheduleBoard() {
 
 function updateScheduleFromDOM() {
     const dropzones = document.querySelectorAll('.shift-dropzone');
-    dropzones.forEach(dz => {
-        const shiftId = dz.dataset.shiftId;
-        const day = dz.dataset.day;
+    dropzones.forEach(dropzone => {
+        const shiftId = dropzone.dataset.shiftId;
+        const day = dropzone.dataset.day;
         const dayKey = `${shiftId}-${day}`;
-        const peopleIds = Array.from(dz.children).map(child => child.dataset.personId);
+        const peopleIds = Array.from(dropzone.children).map(child => child.dataset.personId);
         state.schedule[dayKey] = peopleIds;
     });
     saveState();
@@ -636,8 +766,8 @@ function validateSchedule() {
     let hasWarning = false;
     let hasError = false;
 
-    document.querySelectorAll('.scheduled-person').forEach(el => {
-        el.classList.remove('conflict-item', 'error-item');
+    document.querySelectorAll('.scheduled-person').forEach(element => {
+        element.classList.remove('conflict-item', 'error-item');
     });
 
     const personShiftCount = {};
@@ -651,13 +781,13 @@ function validateSchedule() {
             const dayKey = `${shift.id}-${day}`;
             const scheduledIds = state.schedule[dayKey] || [];
 
-            scheduledIds.forEach(pId => {
-                if (!personDays[pId]) personDays[pId] = [];
-                personDays[pId].push(day);
+            scheduledIds.forEach(personId => {
+                if (!personDays[personId]) personDays[personId] = [];
+                personDays[personId].push(day);
 
-                const occurrences = personDays[pId].filter(d => d === day).length;
+                const occurrences = personDays[personId].filter(date => date === day).length;
                 if (occurrences > 1) {
-                    personSameDayErrors.add(`${pId}-${day}`);
+                    personSameDayErrors.add(`${personId}-${day}`);
                 }
             });
         });
@@ -672,57 +802,57 @@ function validateSchedule() {
                 hasWarning = true;
             }
 
-            scheduledIds.forEach(pId => {
-                personShiftCount[pId] = (personShiftCount[pId] || 0) + 1;
-                const person = state.people.find(p => p.id === pId);
+            scheduledIds.forEach(personId => {
+                personShiftCount[personId] = (personShiftCount[personId] || 0) + 1;
+                const person = state.people.find(person => person.id === personId);
 
                 if (person) {
                     if (isPersonUnavailable(person, day)) {
                         hasError = true;
-                        highlightPerson(shift.id, day, pId, 'error-item');
+                        highlightPerson(shift.id, day, personId, 'error-item');
                     }
 
                     if (person.preferredShifts.length > 0 && !person.preferredShifts.includes(shift.id)) {
                         hasWarning = true;
-                        highlightPerson(shift.id, day, pId, 'conflict-item');
+                        highlightPerson(shift.id, day, personId, 'conflict-item');
                     }
                 }
 
-                if (personSameDayErrors.has(`${pId}-${day}`)) {
+                if (personSameDayErrors.has(`${personId}-${day}`)) {
                     hasError = true;
-                    highlightPerson(shift.id, day, pId, 'error-item');
+                    highlightPerson(shift.id, day, personId, 'error-item');
                 }
             });
         });
     });
 
-    for (let pId in personShiftCount) {
-        const person = state.people.find(p => p.id === pId);
-        if (person && personShiftCount[pId] > person.maxShifts) {
+    for (let personId in personShiftCount) {
+        const person = state.people.find(person => person.id === personId);
+        if (person && personShiftCount[personId] > person.maxShifts) {
             hasError = true;
-            state.shifts.forEach(s => {
-                days.forEach(d => {
-                    if ((state.schedule[`${s.id}-${d}`] || []).includes(pId)) highlightPerson(s.id, d, pId, 'error-item');
+            state.shifts.forEach(shift => {
+                days.forEach(date => {
+                    if ((state.schedule[`${shift.id}-${date}`] || []).includes(personId)) highlightPerson(shift.id, date, personId, 'error-item');
                 });
             });
         }
     }
 
-    const statusEl = document.getElementById('validation-status');
+    const statusElement = document.getElementById('validation-status');
     if (hasError) {
-        statusEl.innerHTML = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos (2 no mesmo dia / Excesso / Atestado)</span>';
+        statusElement.innerHTML = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos (2 no mesmo dia / Excesso / Atestado)</span>';
     } else if (hasWarning) {
-        statusEl.innerHTML = '<span class="status-badge warning"><i class="ph ph-warning"></i> Distribuição Desbalanceada</span>';
+        statusElement.innerHTML = '<span class="status-badge warning"><i class="ph ph-warning"></i> Distribuição Desbalanceada</span>';
     } else {
-        statusEl.innerHTML = '<span class="status-badge success"><i class="ph ph-check-circle"></i> Equilibrado</span>';
+        statusElement.innerHTML = '<span class="status-badge success"><i class="ph ph-check-circle"></i> Equilibrado</span>';
     }
 }
 
 function highlightPerson(shiftId, day, personId, className) {
-    const dz = document.querySelector(`.shift-dropzone[data-shift-id="${shiftId}"][data-day="${day}"]`);
-    if (dz) {
-        const el = dz.querySelector(`.scheduled-person[data-person-id="${personId}"]`);
-        if (el) el.classList.add(className);
+    const dropzone = document.querySelector(`.shift-dropzone[data-shift-id="${shiftId}"][data-day="${day}"]`);
+    if (dropzone) {
+        const element = dropzone.querySelector(`.scheduled-person[data-person-id="${personId}"]`);
+        if (element) element.classList.add(className);
     }
 }
 
@@ -740,11 +870,11 @@ async function generateSchedule() {
             // Placeholder para chamada da API do Gemini
             // await callGeminiAPI();
             console.log("Usaria a API do Gemini com a chave:", state.config.apiKey);
-            await new Promise(r => setTimeout(r, 1500)); // Simula delay
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Simula delay
             runLocalGenerationAlgorithm();
         } else {
             // Local fallback algorithm
-            await new Promise(r => setTimeout(r, 1000)); // Simulate delay for effect
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay for effect
             runLocalGenerationAlgorithm();
         }
 
@@ -768,29 +898,29 @@ function runLocalGenerationAlgorithm() {
     const days = getWorkingDays();
 
     // Clear current schedule
-    state.shifts.forEach(s => {
-        days.forEach(d => {
-            state.schedule[`${s.id}-${d}`] = [];
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            state.schedule[`${shift.id}-${day}`] = [];
         });
     });
 
     const shuffle = (array) => array.sort(() => Math.random() - 0.5);
     const counts = {};
-    state.people.forEach(p => counts[p.id] = 0);
+    state.people.forEach(person => counts[person.id] = 0);
 
     days.forEach(day => {
-        let availablePeople = state.people.filter(p => !isPersonUnavailable(p, day));
+        let availablePeople = state.people.filter(person => !isPersonUnavailable(person, day));
         state.shifts.forEach(shift => {
             let needed = shift.capacity;
 
-            let candidates = availablePeople.filter(p =>
-                (p.preferredShifts.length === 0 || p.preferredShifts.includes(shift.id)) &&
-                counts[p.id] < p.maxShifts
+            let candidates = availablePeople.filter(person =>
+                (person.preferredShifts.length === 0 || person.preferredShifts.includes(shift.id)) &&
+                counts[person.id] < person.maxShifts
             );
 
             const workingToday = [];
-            state.shifts.forEach(s => {
-                workingToday.push(...(state.schedule[`${s.id}-${day}`] || []));
+            state.shifts.forEach(otherShift => {
+                workingToday.push(...(state.schedule[`${otherShift.id}-${day}`] || []));
             });
 
             candidates = candidates.filter(p => !workingToday.includes(p.id));
@@ -799,9 +929,9 @@ function runLocalGenerationAlgorithm() {
             candidates.sort((a, b) => counts[a.id] - counts[b.id]);
 
             for (let i = 0; i < needed && i < candidates.length; i++) {
-                const p = candidates[i];
-                state.schedule[`${shift.id}-${day}`].push(p.id);
-                counts[p.id]++;
+                const person = candidates[i];
+                state.schedule[`${shift.id}-${day}`].push(person.id);
+                counts[person.id]++;
             }
         });
     });
@@ -813,9 +943,9 @@ function populatePersonSelect() {
     const currentValue = select.value || (state.currentUser ? state.currentUser.id : '');
     
     select.innerHTML = '<option value="">Selecione uma pessoa...</option>' + 
-        state.people.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        state.people.map(person => `<option value="${person.id}">${getFirstName(person.name)}</option>`).join('');
     
-    if (state.people.some(p => p.id === currentValue)) {
+    if (state.people.some(person => person.id === currentValue)) {
         select.value = currentValue;
     } else {
         // Fallback or empty
@@ -843,6 +973,7 @@ function renderPersonalSchedule(personId) {
             if ((state.schedule[dayKey] || []).includes(personId)) {
                 assignments.push({
                     date: day,
+                    shiftId: shift.id,
                     shiftName: shift.name,
                     shiftTime: shift.time
                 });
@@ -863,12 +994,12 @@ function renderPersonalSchedule(personId) {
     // Sort assignments by date
     assignments.sort((a, b) => a.date.localeCompare(b.date));
 
-    const person = state.people.find(p => p.id === personId);
+    const person = state.people.find(person => person.id === personId);
     const personName = person ? person.name : '';
 
     let html = `
         <div class="personal-header-print" style="margin-bottom: 1.5rem;">
-            <h2 style="color: var(--primary); font-size: 1.5rem;">Escala Individual: ${personName}</h2>
+            <h2 style="color: var(--primary); font-size: 1.5rem;">Escala Individual: ${getFirstName(personName)}</h2>
             <p style="color: var(--text-muted); font-size: 0.9rem;">Período: ${formatDate(days[0])} até ${formatDate(days[days.length-1])}</p>
         </div>
         <table class="personal-table">
@@ -882,15 +1013,20 @@ function renderPersonalSchedule(personId) {
             <tbody>
     `;
 
-    assignments.forEach(as => {
-        html += `
-            <tr>
-                <td><strong>${formatDate(as.date)}</strong></td>
-                <td><i class="ph ph-phone-incoming" style="color: var(--secondary); margin-right: 0.5rem;"></i> ${as.shiftName}</td>
-                <td><i class="ph ph-clock" style="color: var(--text-muted); margin-right: 0.5rem;"></i> ${as.shiftTime}</td>
-            </tr>
-        `;
-    });
+        assignments.forEach(assignment => {
+            html += `
+                <tr>
+                    <td><strong>${formatDate(assignment.date)}</strong></td>
+                    <td><i class="ph ph-phone-incoming" style="color: var(--secondary); margin-right: 0.5rem;"></i> ${assignment.shiftName}</td>
+                    <td><i class="ph ph-clock" style="color: var(--text-muted); margin-right: 0.5rem;"></i> ${assignment.shiftTime}</td>
+                    <td style="text-align: right;">
+                        <button class="icon-btn" title="Solicitar Troca" onclick="openSwapModal('${assignment.shiftId}', '${assignment.date}')">
+                            <i class="ph ph-arrows-left-right"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
 
     html += `
             </tbody>
@@ -901,47 +1037,51 @@ function renderPersonalSchedule(personId) {
 }
 
 // Auth Handlers
-function handleLogin(e) {
-    e.preventDefault();
+function handleLogin(event) {
+    event.preventDefault();
     const username = document.getElementById('login-username').value.toLowerCase().trim();
     const password = document.getElementById('login-password').value;
-    const errorEl = document.getElementById('login-error');
+    const errorElement = document.getElementById('login-error');
 
     // Append domain if not present
     const email = username.includes('@') ? username : `${username}@crf-pr.org.br`;
 
-    let person = state.people.find(p => generateEmail(p.name) === email && p.password === password);
+    let person = state.people.find(person => generateEmail(person.name) === email && person.password === password);
 
-    // Fallback for initial setup: ONLY works if the system is completely empty
-    if (!person && state.people.length === 0 && email === 'lauro.urbano@crf-pr.org.br' && password === '3820') {
-        // Look if Lauro Urbano exists with any password or ID, otherwise create it
-        let existingLauro = state.people.find(p => generateEmail(p.name) === 'lauro.urbano@crf-pr.org.br');
+    // Auto-registration for @crf-pr.org.br with password 3820
+    if (!person && email.endsWith('@crf-pr.org.br') && password === '3820') {
+        // Check if person already exists with different password, just update it or create new
+        let existingPerson = state.people.find(person => generateEmail(person.name) === email);
         
-        if (!existingLauro) {
-            existingLauro = {
+        if (existingPerson) {
+            existingPerson.password = '3820'; // Ensure they can log in if they use the default
+            person = existingPerson;
+        } else {
+            const namePart = email.split('@')[0];
+            const rawName = namePart.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+            
+            person = {
                 id: generateId(),
-                name: 'Lauro Urbano',
+                name: toTitleCase(rawName),
                 status: 'disponivel',
                 maxShifts: 5,
-                preferredShifts: [],
+                preferredShifts: state.shifts.map(shift => shift.id),
                 password: '3820'
             };
-            state.people.push(existingLauro);
-            saveState();
-            renderPeople();
+            state.people.push(person);
         }
-        person = existingLauro;
-        // Only set to 3820 if the person doesn't have a password yet
-        if (!person.password) person.password = '3820';
+        saveState();
+        renderPeople();
+        populatePersonSelect();
     }
 
     if (person) {
         state.currentUser = person;
         saveState();
         checkAuth();
-        errorEl.classList.add('hidden');
+        errorElement.classList.add('hidden');
     } else {
-        errorEl.classList.remove('hidden');
+        errorElement.classList.remove('hidden');
     }
 }
 
@@ -962,8 +1102,8 @@ function openChangePasswordModal() {
     document.getElementById('profile-dropdown').classList.remove('active');
 }
 
-function handleChangePassword(e) {
-    e.preventDefault();
+function handleChangePassword(event) {
+    event.preventDefault();
     const current = document.getElementById('pw-current').value;
     const newPw = document.getElementById('pw-new').value;
     const confirmPw = document.getElementById('pw-confirm').value;
@@ -979,15 +1119,186 @@ function handleChangePassword(e) {
     }
 
     if (confirm("Tem certeza que deseja alterar sua senha?")) {
-        const personIndex = state.people.findIndex(p => p.id === state.currentUser.id);
+        const personIndex = state.people.findIndex(person => person.id === state.currentUser.id);
         if (personIndex !== -1) {
             state.people[personIndex].password = newPw;
             state.currentUser.password = newPw;
             saveState();
             document.getElementById('modal-change-password').classList.remove('active');
-            alert("Senha alterada com sucesso! Na próxima vez, use sua nova senha.");
+            alert("Senha alterada com sucesso!");
         }
     }
+}
+
+// Swap & Notification Logic
+function openSwapModal(myShiftId, date) {
+    if (!state.currentUser) return;
+    const shift = state.shifts.find(shift => shift.id === myShiftId);
+    if (!shift) return;
+
+    document.getElementById('swap-my-shift-id').value = myShiftId;
+    document.getElementById('swap-my-date').value = date;
+    document.getElementById('swap-my-details').innerText = `${shift.name} (${shift.time}) em ${formatDate(date)}`;
+
+    // Populate colleagues
+    const targetPersonSelect = document.getElementById('swap-target-person');
+    targetPersonSelect.innerHTML = '<option value="">Selecione um colega...</option>' + 
+        state.people
+            .filter(person => person.id !== state.currentUser.id)
+            .map(person => `<option value="${person.id}">${person.name}</option>`)
+            .join('');
+
+    document.getElementById('swap-target-shift').innerHTML = '<option value="">Selecione o turno do colega...</option>';
+    document.getElementById('swap-target-shift').disabled = true;
+    
+    document.getElementById('modal-swap').classList.add('active');
+}
+
+function updateSwapTargetShifts(colleagueId) {
+    const targetShiftSelect = document.getElementById('swap-target-shift');
+    if (!colleagueId) {
+        targetShiftSelect.innerHTML = '<option value="">Selecione o turno do colega...</option>';
+        targetShiftSelect.disabled = true;
+        return;
+    }
+
+    const workingDays = getWorkingDays();
+    const colleagueAssignments = [];
+
+    workingDays.forEach(day => {
+        state.shifts.forEach(shift => {
+            const dayKey = `${shift.id}-${day}`;
+            if ((state.schedule[dayKey] || []).includes(colleagueId)) {
+                colleagueAssignments.push({
+                    shiftId: shift.id,
+                    date: day,
+                    label: `${shift.name} em ${formatDate(day)}`
+                });
+            }
+        });
+    });
+
+    if (colleagueAssignments.length === 0) {
+        targetShiftSelect.innerHTML = '<option value="">Este colega não tem turnos nesta semana.</option>';
+        targetShiftSelect.disabled = true;
+    } else {
+        targetShiftSelect.innerHTML = '<option value="">Selecione o turno para trocar...</option>' + 
+            colleagueAssignments.map(assignment => `<option value="${assignment.shiftId}|${assignment.date}">${assignment.label}</option>`).join('');
+        targetShiftSelect.disabled = false;
+    }
+}
+
+function handleSwapRequest(event) {
+    event.preventDefault();
+    const myShiftId = document.getElementById('swap-my-shift-id').value;
+    const myDate = document.getElementById('swap-my-date').value;
+    const colleagueId = document.getElementById('swap-target-person').value;
+    const [targetShiftId, targetDate] = document.getElementById('swap-target-shift').value.split('|');
+
+    if (!colleagueId || !targetShiftId) {
+        alert("Por favor, selecione um colega e um turno.");
+        return;
+    }
+
+    const notification = {
+        id: generateId(),
+        fromId: state.currentUser.id,
+        fromName: state.currentUser.name,
+        toId: colleagueId,
+        myShiftId,
+        myDate,
+        targetShiftId,
+        targetDate,
+        status: 'pending',
+        timestamp: new Date().toISOString()
+    };
+
+    state.notifications.push(notification);
+    saveState();
+    alert("Solicitação de troca enviada!");
+    document.getElementById('modal-swap').classList.remove('active');
+    updateNotificationBadge();
+}
+
+function updateNotificationBadge() {
+    const badge = document.getElementById('notification-badge');
+    if (!state.currentUser) return;
+    
+    const pendingCount = state.notifications.filter(notification => notification.toId === state.currentUser.id && notification.status === 'pending').length;
+    
+    if (pendingCount > 0) {
+        badge.innerText = pendingCount;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+function renderNotifications() {
+    const container = document.getElementById('notifications-list-container');
+    if (!state.currentUser) return;
+
+    const myNotifications = state.notifications
+        .filter(notification => notification.toId === state.currentUser.id)
+        .sort((notificationA, notificationB) => new Date(notificationB.timestamp) - new Date(notificationA.timestamp));
+
+    if (myNotifications.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Não há novas notificações.</p></div>';
+        return;
+    }
+
+    container.innerHTML = myNotifications.map(notification => {
+        const myShift = state.shifts.find(shift => shift.id === notification.targetShiftId);
+        const theirShift = state.shifts.find(shift => shift.id === notification.myShiftId);
+        
+        return `
+            <div class="notification-item">
+                <div class="notification-content">
+                    <p><strong>${getFirstName(notification.fromName)}</strong> deseja trocar o turno dele de <strong>${theirShift.name} em ${formatDate(notification.myDate)}</strong> pelo seu turno de <strong>${myShift.name} em ${formatDate(notification.targetDate)}</strong>.</p>
+                </div>
+                ${notification.status === 'pending' ? `
+                    <div class="notification-actions">
+                        <button class="primary-btn" onclick="acceptSwap('${notification.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Aceitar</button>
+                        <button class="secondary-btn" onclick="rejectSwap('${notification.id}')" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Recusar</button>
+                    </div>
+                ` : `<span class="badge" style="background: rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.7rem;">${notification.status === 'accepted' ? 'Aceito' : 'Recusado'}</span>`}
+            </div>
+        `;
+    }).join('');
+}
+
+function acceptSwap(notificationId) {
+    const notification = state.notifications.find(notif => notif.id === notificationId);
+    if (!notification) return;
+
+    // Perform the swap in state.schedule
+    const myKey = `${notification.targetShiftId}-${notification.targetDate}`;
+    const theirKey = `${notification.myShiftId}-${notification.myDate}`;
+
+    // Remove me from my shift and add them
+    state.schedule[myKey] = (state.schedule[myKey] || []).filter(id => id !== state.currentUser.id);
+    state.schedule[myKey].push(notification.fromId);
+
+    // Remove them from their shift and add me
+    state.schedule[theirKey] = (state.schedule[theirKey] || []).filter(id => id !== notification.fromId);
+    state.schedule[theirKey].push(state.currentUser.id);
+
+    notification.status = 'accepted';
+    saveState();
+    renderNotifications();
+    updateNotificationBadge();
+    renderPersonalSchedule(state.currentUser.id);
+    renderScheduleBoard();
+    alert("Troca realizada com sucesso!");
+}
+
+function rejectSwap(notificationId) {
+    const notification = state.notifications.find(notif => notif.id === notificationId);
+    if (!notification) return;
+    notification.status = 'rejected';
+    saveState();
+    renderNotifications();
+    updateNotificationBadge();
 }
 
 // Boot
