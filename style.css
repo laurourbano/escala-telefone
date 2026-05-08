@@ -582,12 +582,17 @@ body {
 .form-group select {
     width: 100%;
     padding: 0.6rem 0.75rem;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text-main);
     font-family: inherit;
     transition: var(--transition);
+}
+
+.form-group select option {
+    background-color: var(--bg-surface);
+    color: var(--text-main);
 }
 
 .form-group input:focus,
@@ -808,6 +813,111 @@ body {
     overflow-y: auto;
 }
 
+/* Personal Schedule Styles */
+.personal-schedule-container {
+    width: 100%;
+    max-width: 1400px;
+    padding: 2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.personal-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.personal-table th,
+.personal-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.personal-table th {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.personal-table tr:last-child td {
+    border-bottom: none;
+}
+
+.personal-table tr:hover td {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    gap: 1rem;
+    color: var(--text-muted);
+}
+
+.empty-state p {
+    font-size: 1rem;
+}
+
+/* Print optimizations */
+@media print {
+    .sidebar, .topbar, .logo, .actions, .panel-header button, .config-accordion, .modal-overlay {
+        display: none !important;
+    }
+    
+    body {
+        background: white;
+        color: black;
+        overflow: visible;
+    }
+    
+    .app-container {
+        display: block;
+    }
+    
+    .main-content {
+        display: block;
+    }
+    
+    .panel {
+        display: block !important;
+        position: static;
+    }
+    
+    .panel.hidden {
+        display: none !important;
+    }
+
+    .schedule-grid {
+        border-color: #ccc;
+        background: white;
+    }
+
+    .grid-cell {
+        border-color: #ccc;
+        color: black;
+    }
+
+    .scheduled-person {
+        border-color: #ccc;
+        background: white;
+        color: black;
+        box-shadow: none;
+    }
+}
+
 /* Loading Overlay */
 .loading-overlay {
     position: fixed;
@@ -866,16 +976,45 @@ body {
 }
 
 /* --- PRINT STYLES (EXCEL-LIKE TABLE) --- */
+/* --- PRINT STYLES --- */
 @media print {
-
+    /* Hide everything by default */
     .sidebar,
     .topbar,
     .menu,
     .actions,
     .config-accordion,
-    .panel-header:not(.schedule-header),
-    .panel:not(.schedule-view) {
+    .panel-header button,
+    .personal-actions,
+    .modal-overlay,
+    .loading-overlay,
+    .icon-btn,
+    .primary-btn,
+    .secondary-btn {
         display: none !important;
+    }
+
+    /* Show only the active panel */
+    .panel.hidden {
+        display: none !important;
+    }
+
+    .panel:not(.hidden) {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        background: white !important;
+        color: black !important;
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+        overflow: visible !important;
+        height: auto !important;
+        display: block !important;
     }
 
     .app-container,
@@ -883,86 +1022,308 @@ body {
         display: block !important;
         height: auto !important;
         overflow: visible !important;
-    }
-
-    .schedule-view {
-        display: block !important;
-        position: static !important;
         width: 100% !important;
-        background: none !important;
-        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
-    body {
-        background: #fff;
-        color: #000;
-        overflow: visible !important;
-        height: auto !important;
-        display: block !important;
-    }
-
+    /* Specific styles for Schedule Grid */
     .schedule-grid {
-        border-bottom: 1px solid black;
-        min-width: unset;
-        width: 100%;
+        border: 1px solid black !important;
+        min-width: unset !important;
+        width: 100% !important;
+        background: white !important;
+    }
+
+    .grid-row {
+        border-bottom: 1px solid black !important;
+        background-color: white !important;
+        color: black !important;
     }
 
     .grid-row.even-row {
-        background-color: #e2e8f0 !important; /* Cinza claro bem visível */
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-    .grid-row.odd-row {
-        background-color: #ffffff !important;
+        background-color: #f1f5f9 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
     .header-row {
-        background-color: #cbd5e1 !important; /* Cinza médio para cabeçalho */
-        border-bottom: 2px solid black;
-        color: black;
+        background-color: #e2e8f0 !important;
+        border-bottom: 2px solid black !important;
+        color: black !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
     .grid-cell {
-        border-right: 1px solid black;
-        padding: 0.1rem;
-        height: 60px;
-        min-width: unset;
-    }
-
-    .grid-cell:last-child {
-        border-right: none;
+        border-right: 1px solid black !important;
+        padding: 4px !important;
+        color: black !important;
     }
 
     .time-cell {
-        background: none;
+        flex: 0 0 150px !important;
+        color: black !important;
     }
-
-    .shift-dropzone {
-        padding: 0;
-        display: block;
-        min-height: 60px;
+    
+    .shift-name {
+        color: #1e40af !important; /* Blue for print visibility */
     }
 
     .scheduled-person {
-        background: none;
-        border: none;
-        border-bottom: 1px solid #ccc;
-        border-radius: 0;
-        padding: 0.1rem;
-        box-shadow: none;
-        color: black;
-        text-align: center;
+        background: none !important;
+        border: none !important;
+        border-bottom: 1px solid #ddd !important;
+        padding: 2px !important;
+        box-shadow: none !important;
+        color: black !important;
     }
 
-    .scheduled-person:last-child {
-        border-bottom: none;
+    /* Specific styles for Personal Table */
+    .personal-header-print h2 {
+        color: black !important;
     }
 
-    .scheduled-person i {
-        display: none;
+    .personal-table {
+        border: 1px solid black !important;
+        color: black !important;
+        width: 100% !important;
+        background-color: white !important;
     }
+
+    .personal-table th {
+        background-color: #e2e8f0 !important;
+        color: black !important;
+        border-bottom: 2px solid black !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .personal-table td {
+        border-bottom: 1px solid black !important;
+        color: black !important;
+        background-color: white !important;
+    }
+
+    .ph {
+        display: none !important;
+    }
+}
+
+/* Login Overlay Styles */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-main);
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 40%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: var(--transition);
+}
+
+.login-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.login-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.login-header {
+    text-align: center;
+}
+
+.login-header i {
+    font-size: 3.5rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.login-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.login-header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Input Wrappers with Icons */
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper i:first-child {
+    position: absolute;
+    left: 1rem;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.8rem !important;
+}
+
+.email-input-wrapper input {
+    padding-right: 120px !important;
+}
+
+.email-suffix {
+    position: absolute;
+    right: 1rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+    font-weight: 500;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 0.5rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.toggle-password:hover {
+    color: var(--primary);
+}
+
+.error-text {
+    color: var(--danger);
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.error-text.hidden {
+    display: none;
+}
+
+/* Profile Styles */
+.topbar-actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.profile-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+}
+
+.profile-btn i {
+    font-size: 1.4rem;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    width: 200px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    display: none;
+    flex-direction: column;
+    padding: 0.5rem;
+    z-index: 1000;
+}
+
+.profile-dropdown.active {
+    display: flex;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.profile-dropdown button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: left;
+}
+
+.profile-dropdown button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--primary);
+}
+
+.profile-dropdown .logout-btn {
+    color: var(--danger);
+    border-top: 1px solid var(--border);
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-radius: 0 0 8px 8px;
+}
+
+.profile-dropdown .logout-btn:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Locked Input Styles */
+input[readonly] {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-muted) !important;
+    cursor: not-allowed;
+    border-color: var(--border) !important;
+    opacity: 0.7;
 }

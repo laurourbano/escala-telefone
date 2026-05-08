@@ -6,8 +6,15 @@ let state = {
     config: JSON.parse(localStorage.getItem('escala_config')) || { apiKey: '' },
     scheduleStartDate: localStorage.getItem('escala_start_date') || '',
     scheduleEndDate: localStorage.getItem('escala_end_date') || '',
-    closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || []
+    closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || [],
+    currentUser: JSON.parse(localStorage.getItem('escala_current_user')) || null
 };
+
+// Ensure all people have a password (default 3820)
+state.people.forEach(p => {
+    if (!p.password) p.password = '3820';
+});
+saveState();
 
 if (!state.scheduleStartDate) {
     const today = new Date();
@@ -59,6 +66,19 @@ function init() {
     setupEventListeners();
     aiApiKeyInput.value = state.config.apiKey;
     validateSchedule();
+    populatePersonSelect();
+    checkAuth();
+}
+
+function checkAuth() {
+    if (state.currentUser) {
+        document.getElementById('login-overlay').classList.remove('active');
+        document.getElementById('topbar-user-actions').style.display = 'flex';
+        document.getElementById('display-user-name').innerText = state.currentUser.name;
+    } else {
+        document.getElementById('login-overlay').classList.add('active');
+        document.getElementById('topbar-user-actions').style.display = 'none';
+    }
 }
 
 // Sort shifts by start time and name
@@ -82,6 +102,7 @@ function saveState() {
     localStorage.setItem('escala_start_date', state.scheduleStartDate);
     localStorage.setItem('escala_end_date', state.scheduleEndDate);
     localStorage.setItem('escala_closed_dates', JSON.stringify(state.closedDates));
+    localStorage.setItem('escala_current_user', JSON.stringify(state.currentUser));
 }
 
 // Date Helpers
@@ -134,6 +155,18 @@ function formatDate(dateStr) {
     return `${day}/${month} (${dayNames[date.getDay()]})`;
 }
 
+function generateEmail(name) {
+    const parts = name.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
+        .trim()
+        .split(/\s+/);
+    
+    if (parts.length > 1) {
+        return `${parts[0]}.${parts[parts.length - 1]}@crf-pr.org.br`;
+    }
+    return `${parts[0]}@crf-pr.org.br`;
+}
+
 function isPersonUnavailable(person, dateStr) {
     if (person.status === 'disponivel') return false;
     
@@ -170,6 +203,15 @@ function switchTab(tabId) {
 
     panels.forEach(panel => panel.classList.add('hidden'));
     document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+
+    if (tabId === 'minha-escala') {
+        populatePersonSelect();
+        if (state.currentUser) {
+            const select = document.getElementById('select-person-schedule');
+            select.value = state.currentUser.id;
+            renderPersonalSchedule(state.currentUser.id);
+        }
+    }
 }
 
 // Event Listeners
@@ -268,6 +310,50 @@ function setupEventListeners() {
     document.getElementById('btn-export').addEventListener('click', () => {
         window.print();
     });
+
+    document.getElementById('select-person-schedule').addEventListener('change', (e) => {
+        renderPersonalSchedule(e.target.value);
+    });
+
+    document.getElementById('btn-export-personal').addEventListener('click', () => {
+        const personId = document.getElementById('select-person-schedule').value;
+        if (!personId) {
+            alert("Selecione um nome primeiro!");
+            return;
+        }
+        window.print();
+    });
+
+    // Auth Listeners
+    document.getElementById('form-login').addEventListener('submit', handleLogin);
+    document.getElementById('btn-logout').addEventListener('click', handleLogout);
+    document.getElementById('btn-profile').addEventListener('click', () => {
+        document.getElementById('profile-dropdown').classList.toggle('active');
+    });
+    document.getElementById('btn-open-change-pw').addEventListener('click', openChangePasswordModal);
+    document.getElementById('form-change-password').addEventListener('submit', handleChangePassword);
+    
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.target;
+            const input = document.getElementById(targetId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'ph ph-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'ph ph-eye';
+            }
+        });
+    });
+
+    // Close dropdown on click outside
+    window.addEventListener('click', (e) => {
+        if (!e.target.closest('#topbar-user-actions')) {
+            document.getElementById('profile-dropdown').classList.remove('active');
+        }
+    });
 }
 
 // Render People
@@ -296,6 +382,7 @@ function renderPeople() {
         `;
         peopleList.appendChild(card);
     });
+    populatePersonSelect();
 }
 
 // Render Shifts
@@ -362,7 +449,8 @@ function savePerson(e) {
         unavailabilityStart: document.getElementById('person-unavailability-start').value,
         unavailabilityEnd: document.getElementById('person-unavailability-end').value,
         maxShifts: parseInt(document.getElementById('person-max-shifts').value),
-        preferredShifts
+        preferredShifts,
+        password: id ? (state.people.find(p => p.id === id).password || '3820') : '3820'
     };
 
     if (id) {
@@ -535,6 +623,12 @@ function updateScheduleFromDOM() {
     });
     saveState();
     validateSchedule();
+    
+    // Refresh personal schedule if a person is selected
+    const selectedPersonId = document.getElementById('select-person-schedule').value;
+    if (selectedPersonId) {
+        renderPersonalSchedule(selectedPersonId);
+    }
 }
 
 // Validation
@@ -656,6 +750,12 @@ async function generateSchedule() {
 
         saveState();
         renderScheduleBoard();
+
+        // Refresh personal schedule if a person is selected
+        const selectedPersonId = document.getElementById('select-person-schedule').value;
+        if (selectedPersonId) {
+            renderPersonalSchedule(selectedPersonId);
+        }
     } catch (e) {
         console.error("Erro ao gerar:", e);
         alert("Ocorreu um erro ao gerar a escala.");
@@ -705,6 +805,189 @@ function runLocalGenerationAlgorithm() {
             }
         });
     });
+}
+
+// Personal Schedule
+function populatePersonSelect() {
+    const select = document.getElementById('select-person-schedule');
+    const currentValue = select.value || (state.currentUser ? state.currentUser.id : '');
+    
+    select.innerHTML = '<option value="">Selecione uma pessoa...</option>' + 
+        state.people.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    
+    if (state.people.some(p => p.id === currentValue)) {
+        select.value = currentValue;
+    } else {
+        // Fallback or empty
+    }
+}
+
+function renderPersonalSchedule(personId) {
+    const container = document.getElementById('personal-table-container');
+    if (!personId) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="ph ph-calendar-blank" style="font-size: 3rem; color: var(--text-muted); opacity: 0.3;"></i>
+                <p>Selecione seu nome para ver seus horários</p>
+            </div>
+        `;
+        return;
+    }
+
+    const days = getWorkingDays();
+    const assignments = [];
+
+    days.forEach(day => {
+        state.shifts.forEach(shift => {
+            const dayKey = `${shift.id}-${day}`;
+            if ((state.schedule[dayKey] || []).includes(personId)) {
+                assignments.push({
+                    date: day,
+                    shiftName: shift.name,
+                    shiftTime: shift.time
+                });
+            }
+        });
+    });
+
+    if (assignments.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="ph ph-calendar-x" style="font-size: 3rem; color: var(--text-muted); opacity: 0.3;"></i>
+                <p>Você não possui turnos agendados para este período.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Sort assignments by date
+    assignments.sort((a, b) => a.date.localeCompare(b.date));
+
+    const person = state.people.find(p => p.id === personId);
+    const personName = person ? person.name : '';
+
+    let html = `
+        <div class="personal-header-print" style="margin-bottom: 1.5rem;">
+            <h2 style="color: var(--primary); font-size: 1.5rem;">Escala Individual: ${personName}</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Período: ${formatDate(days[0])} até ${formatDate(days[days.length-1])}</p>
+        </div>
+        <table class="personal-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Escala / Turno</th>
+                    <th>Horário</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    assignments.forEach(as => {
+        html += `
+            <tr>
+                <td><strong>${formatDate(as.date)}</strong></td>
+                <td><i class="ph ph-phone-incoming" style="color: var(--secondary); margin-right: 0.5rem;"></i> ${as.shiftName}</td>
+                <td><i class="ph ph-clock" style="color: var(--text-muted); margin-right: 0.5rem;"></i> ${as.shiftTime}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
+}
+
+// Auth Handlers
+function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.toLowerCase().trim();
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+
+    // Append domain if not present
+    const email = username.includes('@') ? username : `${username}@crf-pr.org.br`;
+
+    let person = state.people.find(p => generateEmail(p.name) === email && p.password === password);
+
+    // Fallback for initial setup: ONLY works if the system is completely empty
+    if (!person && state.people.length === 0 && email === 'lauro.urbano@crf-pr.org.br' && password === '3820') {
+        // Look if Lauro Urbano exists with any password or ID, otherwise create it
+        let existingLauro = state.people.find(p => generateEmail(p.name) === 'lauro.urbano@crf-pr.org.br');
+        
+        if (!existingLauro) {
+            existingLauro = {
+                id: generateId(),
+                name: 'Lauro Urbano',
+                status: 'disponivel',
+                maxShifts: 5,
+                preferredShifts: [],
+                password: '3820'
+            };
+            state.people.push(existingLauro);
+            saveState();
+            renderPeople();
+        }
+        person = existingLauro;
+        // Only set to 3820 if the person doesn't have a password yet
+        if (!person.password) person.password = '3820';
+    }
+
+    if (person) {
+        state.currentUser = person;
+        saveState();
+        checkAuth();
+        errorEl.classList.add('hidden');
+    } else {
+        errorEl.classList.remove('hidden');
+    }
+}
+
+function handleLogout() {
+    state.currentUser = null;
+    saveState();
+    checkAuth();
+    document.getElementById('profile-dropdown').classList.remove('active');
+}
+
+function openChangePasswordModal() {
+    if (!state.currentUser) return;
+    document.getElementById('pw-email').value = generateEmail(state.currentUser.name);
+    document.getElementById('pw-current').value = '';
+    document.getElementById('pw-new').value = '';
+    document.getElementById('pw-confirm').value = '';
+    document.getElementById('modal-change-password').classList.add('active');
+    document.getElementById('profile-dropdown').classList.remove('active');
+}
+
+function handleChangePassword(e) {
+    e.preventDefault();
+    const current = document.getElementById('pw-current').value;
+    const newPw = document.getElementById('pw-new').value;
+    const confirmPw = document.getElementById('pw-confirm').value;
+
+    if (current !== state.currentUser.password) {
+        alert("Senha atual incorreta.");
+        return;
+    }
+
+    if (newPw !== confirmPw) {
+        alert("A nova senha e a confirmação não coincidem.");
+        return;
+    }
+
+    if (confirm("Tem certeza que deseja alterar sua senha?")) {
+        const personIndex = state.people.findIndex(p => p.id === state.currentUser.id);
+        if (personIndex !== -1) {
+            state.people[personIndex].password = newPw;
+            state.currentUser.password = newPw;
+            saveState();
+            document.getElementById('modal-change-password').classList.remove('active');
+            alert("Senha alterada com sucesso! Na próxima vez, use sua nova senha.");
+        }
+    }
 }
 
 // Boot
