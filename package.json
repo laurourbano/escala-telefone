@@ -1,0 +1,29 @@
+{
+  "name": "escala-telefone",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "jest": {
+    "testEnvironment": "jsdom"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laurourbano/escala-telefone.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/laurourbano/escala-telefone/issues"
+  },
+  "homepage": "https://github.com/laurourbano/escala-telefone#readme",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "jest": "^30.4.1",
+    "jest-environment-jsdom": "^30.4.1"
+  }
+}
