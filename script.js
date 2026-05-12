@@ -103,7 +103,7 @@ const closedDatesList = document.getElementById('closed-dates-list');
 // Initialize
 function init() {
     sortShifts(); // Guarantee shifts are sorted initially
-    
+
     // Ensure all names are capitalized (Title Case) and apply defaults
     state.people.forEach(person => {
         if (person.name) person.name = toTitleCase(person.name);
@@ -112,10 +112,10 @@ function init() {
             person.preferredShifts = state.shifts.map(shift => shift.id);
         }
     });
-    
+
     renderPeople();
     renderShifts();
-    
+
     scheduleStartDateInput.value = state.scheduleStartDate;
     scheduleEndDateInput.value = state.scheduleEndDate;
     renderClosedDates();
@@ -133,7 +133,7 @@ function checkAuth() {
         document.getElementById('login-overlay').classList.remove('active');
         document.getElementById('topbar-user-actions').style.display = 'flex';
         document.getElementById('display-user-name').innerText = getFirstName(state.currentUser.name);
-        
+
         // Admin visibility
         const adminTabs = document.querySelectorAll('[data-tab="pessoas"], [data-tab="horarios"], [data-tab="config"]');
         if (isAdmin()) {
@@ -141,7 +141,7 @@ function checkAuth() {
         } else {
             adminTabs.forEach(tab => tab.classList.add('hidden-admin'));
         }
-        
+
         updateNotificationBadge();
     } else {
         document.getElementById('login-overlay').classList.add('active');
@@ -194,10 +194,10 @@ function saveState() {
 function getWorkingDays() {
     const days = [];
     if (!state.scheduleStartDate || !state.scheduleEndDate) return days;
-    
+
     let current = new Date(state.scheduleStartDate + 'T00:00:00');
     const end = new Date(state.scheduleEndDate + 'T00:00:00');
-    
+
     if (isNaN(current.getTime()) || isNaN(end.getTime())) return days;
     if (current > end) return days; // Evita loop ou processamento se início for após fim
 
@@ -217,10 +217,10 @@ function getWorkingDays() {
 function calculateDefaultEndDate(startDateStr) {
     let date = new Date(startDateStr + 'T00:00:00');
     if (isNaN(date.getTime())) return '';
-    
+
     let count = 0;
     let current = new Date(date);
-    
+
     // Queremos 5 dias úteis incluindo o dia de início se for útil
     while (count < 5) {
         if (current.getDay() !== 0 && current.getDay() !== 6) {
@@ -253,7 +253,7 @@ function generateEmail(name) {
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove accents
         .trim()
         .split(/\s+/);
-    
+
     if (emailParts.length > 1) {
         return `${emailParts[0]}.${emailParts[emailParts.length - 1]}@crf-pr.org.br`;
     }
@@ -262,7 +262,7 @@ function generateEmail(name) {
 
 function isPersonUnavailable(person, dateStr) {
     if (person.status === 'disponivel') return false;
-    
+
     if (person.unavailabilityStart && person.unavailabilityEnd) {
         return dateStr >= person.unavailabilityStart && dateStr <= person.unavailabilityEnd;
     } else if (person.unavailabilityStart) {
@@ -293,7 +293,7 @@ function removeClosedDate(date) {
 function switchTab(tabId) {
     menuButtons.forEach(button => button.classList.remove('active'));
     document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
- 
+
     panels.forEach(panel => panel.classList.add('hidden'));
     document.getElementById(`panel-${tabId}`).classList.remove('hidden');
 
@@ -375,12 +375,12 @@ function setupEventListeners() {
         const newDate = e.target.value;
         if (newDate) {
             state.scheduleStartDate = newDate;
-            
+
             // Sugere data final (5 dias úteis depois)
             const defaultEnd = calculateDefaultEndDate(newDate);
             state.scheduleEndDate = defaultEnd;
             scheduleEndDateInput.value = defaultEnd;
-            
+
             saveState();
             renderScheduleBoard();
         }
@@ -433,7 +433,7 @@ function setupEventListeners() {
             } else {
                 alert("Nenhum feriado novo para adicionar neste período.");
             }
-        } catch(error) {
+        } catch (error) {
             alert("Erro ao buscar feriados da BrasilAPI.");
         }
     });
@@ -465,7 +465,7 @@ function setupEventListeners() {
     });
     document.getElementById('btn-open-change-pw').addEventListener('click', openChangePasswordModal);
     document.getElementById('form-change-password').addEventListener('submit', handleChangePassword);
-    
+
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', () => {
             const targetId = button.dataset.target;
@@ -521,8 +521,8 @@ function renderPeople() {
             <div class="card-meta" style="flex-wrap: wrap;">
                 <span class="badge ${person.status}">${person.status}</span>
                 ${adminBadge}
-                ${person.status !== 'disponivel' && (person.unavailabilityStart || person.unavailabilityEnd) ? 
-                    `<span class="badge" style="background: var(--bg-card); border: 1px solid var(--border);">
+                ${person.status !== 'disponivel' && (person.unavailabilityStart || person.unavailabilityEnd) ?
+                `<span class="badge" style="background: var(--bg-card); border: 1px solid var(--border);">
                         ${person.unavailabilityStart ? formatDate(person.unavailabilityStart) : '...'} - 
                         ${person.unavailabilityEnd ? formatDate(person.unavailabilityEnd) : '...'}
                     </span>` : ''}
@@ -598,7 +598,7 @@ function savePerson(event) {
         status: document.getElementById('person-status').value,
         unavailabilityStart: document.getElementById('person-unavailability-start').value,
         unavailabilityEnd: document.getElementById('person-unavailability-end').value,
-        maxShifts: parseInt(document.getElementById('person-max-shifts').value),
+        maxShifts: Math.max(0, parseInt(document.getElementById('person-max-shifts').value) || 0),
         preferredShifts,
         password: existingPerson ? (existingPerson.password || '3820') : '3820',
         isAdmin: existingPerson ? (existingPerson.isAdmin || false) : false
@@ -791,7 +791,7 @@ function updateScheduleFromDOM() {
     });
     saveState();
     validateSchedule();
-    
+
     // Refresh personal schedule if a person is selected
     const selectedPersonId = document.getElementById('select-person-schedule').value;
     if (selectedPersonId) {
@@ -979,11 +979,11 @@ function runLocalGenerationAlgorithm() {
 function populatePersonSelect() {
     const select = document.getElementById('select-person-schedule');
     const currentValue = select.value || (state.currentUser ? state.currentUser.id : '');
-    
+
     const sortedPeople = [...state.people].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
-    select.innerHTML = '<option value="">Selecione uma pessoa...</option>' + 
+    select.innerHTML = '<option value="">Selecione uma pessoa...</option>' +
         sortedPeople.map(person => `<option value="${person.id}">${getFirstName(person.name)}</option>`).join('');
-    
+
     if (state.people.some(person => person.id === currentValue)) {
         select.value = currentValue;
     } else {
@@ -1039,7 +1039,7 @@ function renderPersonalSchedule(personId) {
     let html = `
         <div class="personal-header-print" style="margin-bottom: 1.5rem;">
             <h2 style="color: var(--primary); font-size: 1.5rem;">Escala Individual: ${getFirstName(personName)}</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem;">Período: ${formatDate(days[0])} até ${formatDate(days[days.length-1])}</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Período: ${formatDate(days[0])} até ${formatDate(days[days.length - 1])}</p>
         </div>
         <table class="personal-table">
             <thead>
@@ -1052,8 +1052,8 @@ function renderPersonalSchedule(personId) {
             <tbody>
     `;
 
-        assignments.forEach(assignment => {
-            html += `
+    assignments.forEach(assignment => {
+        html += `
                 <tr>
                     <td><strong>${formatDate(assignment.date)}</strong></td>
                     <td><i class="ph ph-phone-incoming" style="color: var(--secondary); margin-right: 0.5rem;"></i> ${assignment.shiftName}</td>
@@ -1065,7 +1065,7 @@ function renderPersonalSchedule(personId) {
                     </td>
                 </tr>
             `;
-        });
+    });
 
     html += `
             </tbody>
@@ -1091,14 +1091,14 @@ function handleLogin(event) {
     if (!person && email.endsWith('@crf-pr.org.br') && password === '3820') {
         // Check if person already exists with different password, just update it or create new
         let existingPerson = state.people.find(person => generateEmail(person.name) === email);
-        
+
         if (existingPerson) {
             existingPerson.password = '3820'; // Ensure they can log in if they use the default
             person = existingPerson;
         } else {
             const namePart = email.split('@')[0];
             const rawName = namePart.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
-            
+
             person = {
                 id: generateId(),
                 name: toTitleCase(rawName),
@@ -1181,7 +1181,7 @@ function openSwapModal(myShiftId, date) {
 
     // Populate colleagues
     const targetPersonSelect = document.getElementById('swap-target-person');
-    targetPersonSelect.innerHTML = '<option value="">Selecione um colega...</option>' + 
+    targetPersonSelect.innerHTML = '<option value="">Selecione um colega...</option>' +
         state.people
             .filter(person => person.id !== state.currentUser.id)
             .map(person => `<option value="${person.id}">${person.name}</option>`)
@@ -1189,7 +1189,7 @@ function openSwapModal(myShiftId, date) {
 
     document.getElementById('swap-target-shift').innerHTML = '<option value="">Selecione o turno do colega...</option>';
     document.getElementById('swap-target-shift').disabled = true;
-    
+
     document.getElementById('modal-swap').classList.add('active');
 }
 
@@ -1221,7 +1221,7 @@ function updateSwapTargetShifts(colleagueId) {
         targetShiftSelect.innerHTML = '<option value="">Este colega não tem turnos nesta semana.</option>';
         targetShiftSelect.disabled = true;
     } else {
-        targetShiftSelect.innerHTML = '<option value="">Selecione o turno para trocar...</option>' + 
+        targetShiftSelect.innerHTML = '<option value="">Selecione o turno para trocar...</option>' +
             colleagueAssignments.map(assignment => `<option value="${assignment.shiftId}|${assignment.date}">${assignment.label}</option>`).join('');
         targetShiftSelect.disabled = false;
     }
@@ -1262,9 +1262,9 @@ function handleSwapRequest(event) {
 function updateNotificationBadge() {
     const badge = document.getElementById('notification-badge');
     if (!state.currentUser) return;
-    
+
     const pendingCount = state.notifications.filter(notification => notification.toId === state.currentUser.id && notification.status === 'pending').length;
-    
+
     if (pendingCount > 0) {
         badge.innerText = pendingCount;
         badge.classList.remove('hidden');
@@ -1289,7 +1289,7 @@ function renderNotifications() {
     container.innerHTML = myNotifications.map(notification => {
         const myShift = state.shifts.find(shift => shift.id === notification.targetShiftId);
         const theirShift = state.shifts.find(shift => shift.id === notification.myShiftId);
-        
+
         return `
             <div class="notification-item">
                 <div class="notification-content">
