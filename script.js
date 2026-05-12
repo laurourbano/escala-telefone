@@ -1354,7 +1354,7 @@ function exportSchedulePDF() {
     let html = `
         <div id="pdf-export" style="
             font-family: Arial, sans-serif;
-            padding: 20px;
+            padding: 8px;
             color: #111;
             background: white;
         ">
@@ -1363,22 +1363,22 @@ function exportSchedulePDF() {
                 display:flex;
                 justify-content:space-between;
                 align-items:center;
-                margin-bottom:20px;
-                border-bottom:3px solid #7c3aed;
-                padding-bottom:12px;
+                margin-bottom:10px;
+                border-bottom:2px solid #7c3aed;
+                padding-bottom:6px;
             ">
                 <div>
                     <h1 style="
                         margin:0;
                         color:#7c3aed;
-                        font-size:30px;
+                        font-size:22px;
                     ">
                         Escala de Trabalho
                     </h1>
 
                     <p style="
-                        margin:6px 0 0;
-                        font-size:14px;
+                        margin:4px 0 0;
+                        font-size:11px;
                         color:#666;
                     ">
                         ${formatDate(days[0])} até ${formatDate(days[days.length - 1])}
@@ -1388,7 +1388,7 @@ function exportSchedulePDF() {
                 <div style="
                     text-align:right;
                     color:#666;
-                    font-size:12px;
+                    font-size:10px;
                 ">
                     <div><strong>EscalAI</strong></div>
                     <div>${new Date().toLocaleDateString('pt-BR')}</div>
@@ -1406,10 +1406,10 @@ function exportSchedulePDF() {
                         <th style="
                             background:#7c3aed;
                             color:white;
-                            padding:14px;
+                            padding:6px;
                             border:1px solid #ddd;
-                            width:180px;
-                            font-size:14px;
+                            width:120px;
+                            font-size:11px;
                         ">
                             Turno
                         </th>
@@ -1418,9 +1418,9 @@ function exportSchedulePDF() {
                             <th style="
                                 background:#7c3aed;
                                 color:white;
-                                padding:14px;
+                                padding:6px;
                                 border:1px solid #ddd;
-                                font-size:13px;
+                                font-size:10px;
                             ">
                                 ${formatDate(day)}
                             </th>
@@ -1441,20 +1441,20 @@ function exportSchedulePDF() {
 
                 <td style="
                     border:1px solid #ddd;
-                    padding:16px;
+                    padding:8px;
                     vertical-align:top;
                 ">
                     <div style="
-                        font-size:15px;
+                        font-size:11px;
                         font-weight:bold;
-                        margin-bottom:6px;
+                        margin-bottom:4px;
                         color:#111;
                     ">
                         ${shift.name}
                     </div>
 
                     <div style="
-                        font-size:13px;
+                        font-size:10px;
                         color:#666;
                     ">
                         ${shift.time}
@@ -1465,12 +1465,6 @@ function exportSchedulePDF() {
         days.forEach(day => {
 
             const key = `${shift.id}-${day}`;
-
-            /*
-            |--------------------------------------------------------------------------
-            | PEGA DIRETO DA TELA CASO NÃO TENHA SIDO SALVO
-            |--------------------------------------------------------------------------
-            */
 
             const peopleIds = (() => {
 
@@ -1493,9 +1487,9 @@ function exportSchedulePDF() {
             html += `
                 <td style="
                     border:1px solid #ddd;
-                    padding:10px;
+                    padding:4px;
                     vertical-align:top;
-                    height:120px;
+                    height:70px;
                 ">
             `;
 
@@ -1505,8 +1499,8 @@ function exportSchedulePDF() {
                     <div style="
                         color:#bbb;
                         text-align:center;
-                        padding-top:20px;
-                        font-size:12px;
+                        padding-top:10px;
+                        font-size:10px;
                     ">
                         —
                     </div>
@@ -1524,13 +1518,14 @@ function exportSchedulePDF() {
                         <div style="
                             background:#ede9fe;
                             border:1px solid #c4b5fd;
-                            border-radius:10px;
-                            padding:10px;
-                            margin-bottom:8px;
+                            border-radius:6px;
+                            padding:5px;
+                            margin-bottom:4px;
                             text-align:center;
-                            font-size:14px;
+                            font-size:11px;
                             font-weight:600;
                             color:#4c1d95;
+                            line-height:1.2;
                         ">
                             ${getFirstName(person.name)}
                         </div>
@@ -1550,23 +1545,11 @@ function exportSchedulePDF() {
         </div>
     `;
 
-    /*
-    |--------------------------------------------------------------------------
-    | CONTAINER TEMPORÁRIO
-    |--------------------------------------------------------------------------
-    */
-
     const container = document.createElement('div');
 
     container.innerHTML = html;
 
     document.body.appendChild(container);
-
-    /*
-    |--------------------------------------------------------------------------
-    | PREVIEW WINDOW
-    |--------------------------------------------------------------------------
-    */
 
     const previewWindow = window.open('', '_blank');
 
@@ -1579,7 +1562,7 @@ function exportSchedulePDF() {
 
                 body{
                     margin:0;
-                    padding:20px;
+                    padding:12px;
                     background:#e5e7eb;
                     font-family:Arial,sans-serif;
                 }
@@ -1589,21 +1572,21 @@ function exportSchedulePDF() {
                     top:0;
                     z-index:999;
                     background:white;
-                    padding:16px;
-                    margin-bottom:20px;
-                    border-radius:14px;
-                    box-shadow:0 4px 20px rgba(0,0,0,.08);
+                    padding:10px;
+                    margin-bottom:12px;
+                    border-radius:10px;
+                    box-shadow:0 4px 12px rgba(0,0,0,.08);
                     display:flex;
-                    gap:12px;
+                    gap:10px;
                     align-items:center;
                 }
 
                 button{
                     border:none;
-                    padding:12px 18px;
-                    border-radius:10px;
+                    padding:10px 14px;
+                    border-radius:8px;
                     cursor:pointer;
-                    font-size:14px;
+                    font-size:12px;
                     font-weight:600;
                 }
 
@@ -1619,9 +1602,9 @@ function exportSchedulePDF() {
 
                 #preview-container{
                     background:white;
-                    padding:20px;
-                    border-radius:18px;
-                    box-shadow:0 10px 40px rgba(0,0,0,.12);
+                    padding:10px;
+                    border-radius:12px;
+                    box-shadow:0 6px 18px rgba(0,0,0,.10);
                     overflow:auto;
                 }
 
@@ -1652,12 +1635,6 @@ function exportSchedulePDF() {
 
     previewWindow.document.close();
 
-    /*
-    |--------------------------------------------------------------------------
-    | DOWNLOAD PDF
-    |--------------------------------------------------------------------------
-    */
-
     previewWindow.onload = () => {
 
         previewWindow.document
@@ -1670,7 +1647,7 @@ function exportSchedulePDF() {
                 html2pdf()
                     .set({
 
-                        margin: 0.3,
+                        margin: 0.1,
 
                         filename: `escala-${state.scheduleStartDate}.pdf`,
 
@@ -1680,7 +1657,7 @@ function exportSchedulePDF() {
                         },
 
                         html2canvas: {
-                            scale: 3,
+                            scale: 2,
                             useCORS: true
                         },
 
@@ -1700,12 +1677,6 @@ function exportSchedulePDF() {
 
             });
     };
-
-    /*
-    |--------------------------------------------------------------------------
-    | LIMPA CONTAINER
-    |--------------------------------------------------------------------------
-    */
 
     document.body.removeChild(container);
 }
