@@ -57,9 +57,10 @@ let state = {
     notifications: JSON.parse(localStorage.getItem('escala_notifications')) || []
 };
 
-// Ensure all people have a password (default 3820)
+// Ensure all people have a password (default 3820) and isAdmin field
 state.people.forEach(person => {
     if (!person.password) person.password = '3820';
+    if (person.isAdmin === undefined) person.isAdmin = false;
 });
 saveState();
 
@@ -162,7 +163,9 @@ function sortShifts() {
 
 function isAdmin() {
     if (!state.currentUser) return false;
-    return generateEmail(state.currentUser.name) === 'lauro.urbano@crf-pr.org.br';
+    // Owner always has admin (hardcoded fallback)
+    if (generateEmail(state.currentUser.name) === 'lauro.urbano@crf-pr.org.br') return true;
+    return state.currentUser.isAdmin === true;
 }
 
 function toTitleCase(text) {
@@ -495,19 +498,29 @@ function sortPeople() {
 function renderPeople() {
     sortPeople();
     peopleList.innerHTML = '';
+    const currentIsAdmin = isAdmin();
     state.people.forEach(person => {
         const card = document.createElement('div');
         card.className = 'card';
+        const isOwner = generateEmail(person.name) === 'lauro.urbano@crf-pr.org.br';
+        const adminBadge = person.isAdmin || isOwner
+            ? `<span class="badge" style="background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.5); color: #ca8a04;"><i class="ph ph-crown-simple"></i> Admin</span>`
+            : '';
+        const toggleAdminBtn = currentIsAdmin && !isOwner
+            ? `<button title="${person.isAdmin ? 'Remover admin' : 'Tornar admin'}" onclick="toggleAdmin('${person.id}')" style="color: ${person.isAdmin ? 'var(--danger)' : 'var(--accent)'};"><i class="ph ph-crown-simple"></i></button>`
+            : '';
         card.innerHTML = `
             <div class="card-header">
                 <span class="card-title">${getFirstName(person.name)}</span>
                 <div class="card-actions">
+                    ${toggleAdminBtn}
                     <button onclick="editPerson('${person.id}')"><i class="ph ph-pencil"></i></button>
                     <button class="delete-btn" onclick="deletePerson('${person.id}')"><i class="ph ph-trash"></i></button>
                 </div>
             </div>
             <div class="card-meta" style="flex-wrap: wrap;">
                 <span class="badge ${person.status}">${person.status}</span>
+                ${adminBadge}
                 ${person.status !== 'disponivel' && (person.unavailabilityStart || person.unavailabilityEnd) ? 
                     `<span class="badge" style="background: var(--bg-card); border: 1px solid var(--border);">
                         ${person.unavailabilityStart ? formatDate(person.unavailabilityStart) : '...'} - 
@@ -578,6 +591,7 @@ function savePerson(event) {
     const id = document.getElementById('person-id').value;
     const preferredShifts = Array.from(document.querySelectorAll('input[name="pref-shifts"]:checked')).map(checkbox => checkbox.value);
 
+    const existingPerson = id ? state.people.find(person => person.id === id) : null;
     const personData = {
         id: id || generateId(),
         name: toTitleCase(document.getElementById('person-name').value.trim()),
@@ -586,7 +600,8 @@ function savePerson(event) {
         unavailabilityEnd: document.getElementById('person-unavailability-end').value,
         maxShifts: parseInt(document.getElementById('person-max-shifts').value),
         preferredShifts,
-        password: id ? (state.people.find(person => person.id === id).password || '3820') : '3820'
+        password: existingPerson ? (existingPerson.password || '3820') : '3820',
+        isAdmin: existingPerson ? (existingPerson.isAdmin || false) : false
     };
 
     if (id) {
@@ -605,6 +620,22 @@ function savePerson(event) {
 function editPerson(id) {
     const person = state.people.find(person => person.id === id);
     if (person) openPersonModal(person);
+}
+
+function toggleAdmin(id) {
+    if (!isAdmin()) return;
+    const person = state.people.find(p => p.id === id);
+    if (!person) return;
+    const action = person.isAdmin ? 'remover o acesso de administrador de' : 'tornar administrador';
+    if (!confirm(`Deseja ${action} ${getFirstName(person.name)}?`)) return;
+    person.isAdmin = !person.isAdmin;
+    // Sync currentUser if this is the logged-in person
+    if (state.currentUser && state.currentUser.id === id) {
+        state.currentUser.isAdmin = person.isAdmin;
+        localStorage.setItem('escala_current_user', JSON.stringify(state.currentUser));
+    }
+    saveState();
+    renderPeople();
 }
 
 function deletePerson(id) {
