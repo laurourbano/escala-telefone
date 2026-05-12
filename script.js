@@ -526,7 +526,11 @@ function renderPeople() {
                         ${person.unavailabilityStart ? formatDate(person.unavailabilityStart) : '...'} - 
                         ${person.unavailabilityEnd ? formatDate(person.unavailabilityEnd) : '...'}
                     </span>` : ''}
-                <span>Máx: ${person.maxShifts} turnos</span>
+                    <span>
+                    ${person.maxShifts === 0
+                ? 'Sem escalas'
+                : `Máx: ${person.maxShifts} turnos`}
+                </span>
             </div>
         `;
         peopleList.appendChild(card);
@@ -952,6 +956,7 @@ function runLocalGenerationAlgorithm() {
             let needed = shift.capacity;
 
             let candidates = availablePeople.filter(person =>
+                person.maxShifts > 0 &&
                 (person.preferredShifts.length === 0 || person.preferredShifts.includes(shift.id)) &&
                 counts[person.id] < person.maxShifts
             );
