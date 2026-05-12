@@ -1349,31 +1349,221 @@ document.addEventListener('DOMContentLoaded', init);
 
 function exportSchedulePDF() {
 
-    const element = document.getElementById('panel-escala');
+    const days = getWorkingDays();
 
-    const options = {
-        margin: 0.4,
-        filename: `escala-${state.scheduleStartDate}.pdf`,
-        image: {
-            type: 'jpeg',
-            quality: 1
-        },
-        html2canvas: {
-            scale: 2,
-            useCORS: true
-        },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'landscape'
-        },
-        pagebreak: {
-            mode: ['avoid-all', 'css', 'legacy']
-        }
-    };
+    let html = `
+        <div id="pdf-export" style="
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            color: #111;
+            background: white;
+        ">
+
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin-bottom:20px;
+                border-bottom:3px solid #7c3aed;
+                padding-bottom:12px;
+            ">
+                <div>
+                    <h1 style="
+                        margin:0;
+                        color:#7c3aed;
+                        font-size:30px;
+                    ">
+                        Escala de Trabalho
+                    </h1>
+
+                    <p style="
+                        margin:6px 0 0;
+                        font-size:14px;
+                        color:#666;
+                    ">
+                        ${formatDate(days[0])} até ${formatDate(days[days.length - 1])}
+                    </p>
+                </div>
+
+                <div style="
+                    text-align:right;
+                    color:#666;
+                    font-size:12px;
+                ">
+                    <div><strong>EscalAI</strong></div>
+                    <div>${new Date().toLocaleDateString('pt-BR')}</div>
+                </div>
+            </div>
+
+            <table style="
+                width:100%;
+                border-collapse:collapse;
+                table-layout:fixed;
+            ">
+                <thead>
+                    <tr>
+
+                        <th style="
+                            background:#7c3aed;
+                            color:white;
+                            padding:14px;
+                            border:1px solid #ddd;
+                            width:180px;
+                            font-size:14px;
+                        ">
+                            Turno
+                        </th>
+
+                        ${days.map(day => `
+                            <th style="
+                                background:#7c3aed;
+                                color:white;
+                                padding:14px;
+                                border:1px solid #ddd;
+                                font-size:13px;
+                            ">
+                                ${formatDate(day)}
+                            </th>
+                        `).join('')}
+
+                    </tr>
+                </thead>
+
+                <tbody>
+    `;
+
+    state.shifts.forEach((shift, index) => {
+
+        html += `
+            <tr style="
+                background:${index % 2 === 0 ? '#fafafa' : '#ffffff'};
+            ">
+
+                <td style="
+                    border:1px solid #ddd;
+                    padding:16px;
+                    vertical-align:top;
+                ">
+                    <div style="
+                        font-size:15px;
+                        font-weight:bold;
+                        margin-bottom:6px;
+                        color:#111;
+                    ">
+                        ${shift.name}
+                    </div>
+
+                    <div style="
+                        font-size:13px;
+                        color:#666;
+                    ">
+                        ${shift.time}
+                    </div>
+                </td>
+        `;
+
+        days.forEach(day => {
+
+            const key = `${shift.id}-${day}`;
+            const peopleIds = state.schedule[key] || [];
+
+            html += `
+                <td style="
+                    border:1px solid #ddd;
+                    padding:10px;
+                    vertical-align:top;
+                    height:120px;
+                ">
+            `;
+
+            if (peopleIds.length === 0) {
+
+                html += `
+                    <div style="
+                        color:#bbb;
+                        text-align:center;
+                        padding-top:20px;
+                        font-size:12px;
+                    ">
+                        —
+                    </div>
+                `;
+
+            } else {
+
+                peopleIds.forEach(personId => {
+
+                    const person = state.people.find(p => p.id === personId);
+
+                    if (!person) return;
+
+                    html += `
+                        <div style="
+                            background:#ede9fe;
+                            border:1px solid #c4b5fd;
+                            border-radius:10px;
+                            padding:10px;
+                            margin-bottom:8px;
+                            text-align:center;
+                            font-size:14px;
+                            font-weight:600;
+                            color:#4c1d95;
+                        ">
+                            ${getFirstName(person.name)}
+                        </div>
+                    `;
+                });
+            }
+
+            html += `</td>`;
+        });
+
+        html += `</tr>`;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    const container = document.createElement('div');
+
+    container.innerHTML = html;
+
+    document.body.appendChild(container);
+
+    const element = container.querySelector('#pdf-export');
 
     html2pdf()
-        .set(options)
+        .set({
+            margin: 0.3,
+
+            filename: `escala-${state.scheduleStartDate}.pdf`,
+
+            image: {
+                type: 'jpeg',
+                quality: 1
+            },
+
+            html2canvas: {
+                scale: 3,
+                useCORS: true
+            },
+
+            jsPDF: {
+                unit: 'in',
+                format: 'a4',
+                orientation: 'landscape'
+            },
+
+            pagebreak: {
+                mode: ['avoid-all', 'css', 'legacy']
+            }
+        })
         .from(element)
-        .save();
+        .save()
+        .then(() => {
+            document.body.removeChild(container);
+        });
 }
