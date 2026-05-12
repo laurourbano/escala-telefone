@@ -1,0 +1,86 @@
+name: Deploy to GitHub Pages, Netlify e Vercel
+
+on:
+  push:
+    branches:
+      - main
+
+# Permissão necessária para o GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita deploys paralelos no GitHub Pages
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # ─────────────────────────────────────────
+  # 1. GitHub Pages
+  # ─────────────────────────────────────────
+  deploy-github-pages:
+    name: GitHub Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Faz upload de toda a raiz do repositório (site estático)
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ─────────────────────────────────────────
+  # 2. Netlify
+  # ─────────────────────────────────────────
+  deploy-netlify:
+    name: Netlify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: "."
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy via GitHub Actions - ${{ github.sha }}"
+          enable-pull-request-comment: false
+          enable-commit-comment: false
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+  # ─────────────────────────────────────────
+  # 3. Vercel
+  # ─────────────────────────────────────────
+  deploy-vercel:
+    name: Vercel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod"
+          working-directory: "."
