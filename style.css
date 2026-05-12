@@ -970,49 +970,146 @@ body {
 }
 
 /* Print optimizations */
+/* =========================
+   PDF / IMPRESSÃO
+========================= */
+
 @media print {
-    .sidebar, .topbar, .logo, .actions, .panel-header button, .config-accordion, .modal-overlay {
-        display: none !important;
-    }
-    
+
     body {
-        background: white;
-        color: black;
-        overflow: visible;
+        background: white !important;
+        color: #000 !important;
+        font-size: 14pt;
     }
-    
-    .app-container {
-        display: block;
-    }
-    
-    .main-content {
-        display: block;
-    }
-    
-    .panel {
-        display: block !important;
-        position: static;
-    }
-    
-    .panel.hidden {
+
+    .sidebar,
+    .topbar,
+    .actions,
+    .config-accordion,
+    .icon-btn,
+    .primary-btn,
+    .secondary-btn,
+    .close-modal,
+    .profile-dropdown,
+    .validation-status,
+    #btn-export,
+    #btn-generate,
+    #btn-export-personal {
         display: none !important;
+    }
+
+    .main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .schedule-view,
+    .panel,
+    .schedule-board {
+        width: 100% !important;
+        overflow: visible !important;
     }
 
     .schedule-grid {
-        border-color: #ccc;
-        background: white;
+        border-collapse: collapse;
+        width: 100%;
+        display: table;
+    }
+
+    .grid-row {
+        display: table-row;
+        page-break-inside: avoid;
     }
 
     .grid-cell {
-        border-color: #ccc;
-        color: black;
+        display: table-cell;
+        border: 1px solid #d1d5db;
+        padding: 14px;
+        vertical-align: top;
+    }
+
+    .header-row .grid-cell {
+        background: #7c3aed !important;
+        color: white !important;
+        font-weight: bold;
+        font-size: 14pt;
+        text-align: center;
+        padding: 16px;
+    }
+
+    .time-cell {
+        min-width: 180px;
+        background: #f3f4f6 !important;
+        font-weight: bold;
+    }
+
+    .shift-name {
+        display: block;
+        font-size: 14pt;
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+
+    .shift-time {
+        font-size: 12pt;
+        color: #444 !important;
     }
 
     .scheduled-person {
-        border-color: #ccc;
-        background: white;
-        color: black;
-        box-shadow: none;
+        background: #ede9fe !important;
+        border: 1px solid #c4b5fd !important;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        font-size: 13pt;
+        font-weight: 600;
+        color: #4c1d95 !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .scheduled-person .name {
+        font-size: 13pt;
+    }
+
+    .scheduled-person i {
+        display: none;
+    }
+
+    .personal-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14pt;
+    }
+
+    .personal-table th {
+        background: #7c3aed !important;
+        color: white !important;
+        padding: 14px;
+        text-align: left;
+    }
+
+    .personal-table td {
+        border: 1px solid #ddd;
+        padding: 14px;
+    }
+
+    .personal-header-print h2 {
+        font-size: 24pt !important;
+        margin-bottom: 10px;
+        color: #5b21b6 !important;
+    }
+
+    .personal-header-print p {
+        font-size: 13pt;
+        color: #555 !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 1.2cm;
     }
 }
 
@@ -1076,6 +1173,7 @@ body {
 /* --- PRINT STYLES (EXCEL-LIKE TABLE) --- */
 /* --- PRINT STYLES --- */
 @media print {
+
     /* Hide everything by default */
     .sidebar,
     .topbar,
@@ -1163,9 +1261,10 @@ body {
         flex: 0 0 150px !important;
         color: black !important;
     }
-    
+
     .shift-name {
-        color: #1e40af !important; /* Blue for print visibility */
+        color: #1e40af !important;
+        /* Blue for print visibility */
     }
 
     .scheduled-person {
@@ -1216,7 +1315,7 @@ body {
     right: 0;
     bottom: 0;
     background-color: var(--bg-main);
-    background-image: 
+    background-image:
         radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
         radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 40%);
     display: flex;
@@ -1413,8 +1512,15 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Locked Input Styles */
