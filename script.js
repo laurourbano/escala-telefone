@@ -486,8 +486,14 @@ function setupEventListeners() {
     });
 }
 
+// Sort people alphabetically
+function sortPeople() {
+    state.people.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+}
+
 // Render People
 function renderPeople() {
+    sortPeople();
     peopleList.innerHTML = '';
     state.people.forEach(person => {
         const card = document.createElement('div');
@@ -590,6 +596,7 @@ function savePerson(event) {
         state.people.push(personData);
     }
 
+    sortPeople();
     saveState();
     renderPeople();
     document.getElementById('modal-person').classList.remove('active');
@@ -942,8 +949,9 @@ function populatePersonSelect() {
     const select = document.getElementById('select-person-schedule');
     const currentValue = select.value || (state.currentUser ? state.currentUser.id : '');
     
+    const sortedPeople = [...state.people].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
     select.innerHTML = '<option value="">Selecione uma pessoa...</option>' + 
-        state.people.map(person => `<option value="${person.id}">${getFirstName(person.name)}</option>`).join('');
+        sortedPeople.map(person => `<option value="${person.id}">${getFirstName(person.name)}</option>`).join('');
     
     if (state.people.some(person => person.id === currentValue)) {
         select.value = currentValue;
