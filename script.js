@@ -1465,7 +1465,30 @@ function exportSchedulePDF() {
         days.forEach(day => {
 
             const key = `${shift.id}-${day}`;
-            const peopleIds = state.schedule[key] || [];
+
+            /*
+            |--------------------------------------------------------------------------
+            | PEGA DIRETO DA TELA CASO NÃO TENHA SIDO SALVO
+            |--------------------------------------------------------------------------
+            */
+
+            const peopleIds = (() => {
+
+                if (state.schedule[key]?.length) {
+                    return state.schedule[key];
+                }
+
+                const dropzone = document.querySelector(
+                    `.shift-dropzone[data-shift-id="${shift.id}"][data-day="${day}"]`
+                );
+
+                if (!dropzone) return [];
+
+                return Array.from(
+                    dropzone.querySelectorAll('.scheduled-person')
+                ).map(el => el.dataset.personId);
+
+            })();
 
             html += `
                 <td style="
@@ -1527,43 +1550,162 @@ function exportSchedulePDF() {
         </div>
     `;
 
+    /*
+    |--------------------------------------------------------------------------
+    | CONTAINER TEMPORÁRIO
+    |--------------------------------------------------------------------------
+    */
+
     const container = document.createElement('div');
 
     container.innerHTML = html;
 
     document.body.appendChild(container);
 
-    const element = container.querySelector('#pdf-export');
+    /*
+    |--------------------------------------------------------------------------
+    | PREVIEW WINDOW
+    |--------------------------------------------------------------------------
+    */
 
-    html2pdf()
-        .set({
-            margin: 0.3,
+    const previewWindow = window.open('', '_blank');
 
-            filename: `escala-${state.scheduleStartDate}.pdf`,
+    previewWindow.document.write(`
+        <html>
+        <head>
+            <title>Pré-visualização da Escala</title>
 
-            image: {
-                type: 'jpeg',
-                quality: 1
-            },
+            <style>
 
-            html2canvas: {
-                scale: 3,
-                useCORS: true
-            },
+                body{
+                    margin:0;
+                    padding:20px;
+                    background:#e5e7eb;
+                    font-family:Arial,sans-serif;
+                }
 
-            jsPDF: {
-                unit: 'in',
-                format: 'a4',
-                orientation: 'landscape'
-            },
+                .toolbar{
+                    position:sticky;
+                    top:0;
+                    z-index:999;
+                    background:white;
+                    padding:16px;
+                    margin-bottom:20px;
+                    border-radius:14px;
+                    box-shadow:0 4px 20px rgba(0,0,0,.08);
+                    display:flex;
+                    gap:12px;
+                    align-items:center;
+                }
 
-            pagebreak: {
-                mode: ['avoid-all', 'css', 'legacy']
-            }
-        })
-        .from(element)
-        .save()
-        .then(() => {
-            document.body.removeChild(container);
-        });
+                button{
+                    border:none;
+                    padding:12px 18px;
+                    border-radius:10px;
+                    cursor:pointer;
+                    font-size:14px;
+                    font-weight:600;
+                }
+
+                .download{
+                    background:#7c3aed;
+                    color:white;
+                }
+
+                .close{
+                    background:#ef4444;
+                    color:white;
+                }
+
+                #preview-container{
+                    background:white;
+                    padding:20px;
+                    border-radius:18px;
+                    box-shadow:0 10px 40px rgba(0,0,0,.12);
+                    overflow:auto;
+                }
+
+            </style>
+        </head>
+
+        <body>
+
+            <div class="toolbar">
+
+                <button class="download" id="btn-download">
+                    Baixar PDF
+                </button>
+
+                <button class="close" onclick="window.close()">
+                    Fechar
+                </button>
+
+            </div>
+
+            <div id="preview-container">
+                ${html}
+            </div>
+
+        </body>
+        </html>
+    `);
+
+    previewWindow.document.close();
+
+    /*
+    |--------------------------------------------------------------------------
+    | DOWNLOAD PDF
+    |--------------------------------------------------------------------------
+    */
+
+    previewWindow.onload = () => {
+
+        previewWindow.document
+            .getElementById('btn-download')
+            .addEventListener('click', () => {
+
+                const pdfElement =
+                    previewWindow.document.querySelector('#pdf-export');
+
+                html2pdf()
+                    .set({
+
+                        margin: 0.3,
+
+                        filename: `escala-${state.scheduleStartDate}.pdf`,
+
+                        image: {
+                            type: 'jpeg',
+                            quality: 1
+                        },
+
+                        html2canvas: {
+                            scale: 3,
+                            useCORS: true
+                        },
+
+                        jsPDF: {
+                            unit: 'in',
+                            format: 'a4',
+                            orientation: 'landscape'
+                        },
+
+                        pagebreak: {
+                            mode: ['avoid-all', 'css', 'legacy']
+                        }
+
+                    })
+                    .from(pdfElement)
+                    .save();
+
+            });
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | LIMPA CONTAINER
+    |--------------------------------------------------------------------------
+    */
+
+    document.body.removeChild(container);
 }
