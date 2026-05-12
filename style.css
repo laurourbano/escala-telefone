@@ -518,7 +518,7 @@ body {
 .grid-row {
     display: flex;
     flex-wrap: nowrap;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
 }
 
 .grid-row:last-child {
@@ -526,7 +526,7 @@ body {
 }
 
 .grid-row.even-row {
-    background-color: var(--bg-surface-hover);
+    background-color: rgba(139, 92, 246, 0.04);
 }
 
 .grid-row.odd-row {
@@ -555,11 +555,20 @@ body {
     flex: 0 0 250px;
     min-width: 130px;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.18);
+    border-right: 3px solid rgba(139, 92, 246, 0.4) !important;
+    padding-left: 0.75rem;
 }
 
 .header-row .time-cell {
     background-color: transparent;
+    border-right: 3px solid rgba(139, 92, 246, 0.2) !important;
+}
+
+.header-row {
+    background-color: rgba(139, 92, 246, 0.08) !important;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(139, 92, 246, 0.3) !important;
 }
 
 .shift-name {
@@ -606,17 +615,23 @@ body {
 }
 
 .scheduled-person {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(59, 130, 246, 0.08));
+    border: 1px solid rgba(139, 92, 246, 0.3);
     border-radius: 8px;
-    padding: 0.4rem 0.6rem;
+    padding: 0.35rem 0.6rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
     cursor: grab;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
     overflow: hidden;
+    transition: var(--transition);
+}
+
+.scheduled-person:hover {
+    border-color: rgba(139, 92, 246, 0.6);
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.12));
 }
 
 .scheduled-person:active {

@@ -11,6 +11,8 @@
     <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
     <!-- SortableJS for smooth drag and drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- html2pdf for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <header class="topbar">
@@ -53,7 +55,7 @@
 
             <div class="actions">
                 <button id="btn-generate" class="primary-btn"><i class="ph ph-magic-wand"></i> <span>Gerar Escala com IA</span></button>
-                <button id="btn-export" class="secondary-btn"><i class="ph ph-export"></i> <span>Exportar</span></button>
+                <button id="btn-export" class="secondary-btn"><i class="ph ph-file-pdf"></i> <span>Baixar PDF</span></button>
             </div>
         </aside>
 
@@ -104,7 +106,7 @@
                             <option value="">Selecione uma pessoa...</option>
                         </select>
                     </div>
-                    <button id="btn-export-personal" class="secondary-btn" style="height: 42px;"><i class="ph ph-file-pdf"></i> Exportar Minha Escala</button>
+                    <button id="btn-export-personal" class="secondary-btn" style="height: 42px;"><i class="ph ph-file-pdf"></i> Baixar PDF</button>
                 </div>
                 <div class="personal-schedule-container" style="padding-top: 0;">
                     <div id="personal-table-container">
