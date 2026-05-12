@@ -440,9 +440,7 @@ function setupEventListeners() {
 
     // Actions
     document.getElementById('btn-generate').addEventListener('click', generateSchedule);
-    document.getElementById('btn-export').addEventListener('click', () => {
-        window.print();
-    });
+    document.getElementById('btn-export').addEventListener('click', exportSchedulePDF);
 
     document.getElementById('select-person-schedule').addEventListener('change', (e) => {
         renderPersonalSchedule(e.target.value);
@@ -1347,3 +1345,35 @@ function rejectSwap(notificationId) {
 
 // Boot
 document.addEventListener('DOMContentLoaded', init);
+
+
+function exportSchedulePDF() {
+
+    const element = document.getElementById('panel-escala');
+
+    const options = {
+        margin: 0.5,
+        filename: `escala-${state.scheduleStartDate}.pdf`,
+        image: {
+            type: 'jpeg',
+            quality: 1
+        },
+        html2canvas: {
+            scale: 2,
+            useCORS: true
+        },
+        jsPDF: {
+            unit: 'in',
+            format: 'a4',
+            orientation: 'landscape'
+        },
+        pagebreak: {
+            mode: ['avoid-all', 'css', 'legacy']
+        }
+    };
+
+    html2pdf()
+        .set(options)
+        .from(element)
+        .save();
+}
