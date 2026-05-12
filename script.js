@@ -1352,7 +1352,7 @@ function exportSchedulePDF() {
     const element = document.getElementById('panel-escala');
 
     const options = {
-        margin: 0.5,
+        margin: 0.4,
         filename: `escala-${state.scheduleStartDate}.pdf`,
         image: {
             type: 'jpeg',
@@ -1363,7 +1363,7 @@ function exportSchedulePDF() {
             useCORS: true
         },
         jsPDF: {
-            unit: 'in',
+            unit: 'mm',
             format: 'a4',
             orientation: 'landscape'
         },
