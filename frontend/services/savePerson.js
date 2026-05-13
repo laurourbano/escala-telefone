@@ -5,6 +5,7 @@ function savePerson(event) {
     const status = document.getElementById('person-status').value;
     var maxShiftsVal = parseInt(document.getElementById('person-max-shifts').value);
     var maxShifts = isNaN(maxShiftsVal) ? 4 : maxShiftsVal;
+    var finalStatus = maxShifts === 0 ? 'indisponivel' : status;
     const preferredCheckboxes = document.querySelectorAll('#person-preferred-shifts input:checked');
     const preferredShifts = Array.from(preferredCheckboxes).map(cb => cb.value);
     const unavailabilityStart = document.getElementById('person-unavailability-start').value;
@@ -17,11 +18,11 @@ function savePerson(event) {
         if (index !== -1) {
             const wasUnavailable = state.people[index].status !== 'disponivel';
             state.people[index].name = name;
-            state.people[index].status = status;
+            state.people[index].status = finalStatus;
             state.people[index].maxShifts = maxShifts;
             state.people[index].preferredShifts = preferredShifts;
 
-            if (status === 'disponivel') {
+            if (finalStatus === 'disponivel') {
                 state.people[index].unavailabilityStart = '';
                 state.people[index].unavailabilityEnd = '';
             } else {
@@ -33,16 +34,20 @@ function savePerson(event) {
         state.people.push({
             id: generateId(),
             name,
-            status,
+            status: finalStatus,
             maxShifts,
             preferredShifts,
             password: '3820',
             isAdmin: false,
-            unavailabilityStart: status === 'disponivel' ? '' : unavailabilityStart,
-            unavailabilityEnd: status === 'disponivel' ? '' : unavailabilityEnd
+            unavailabilityStart: finalStatus === 'disponivel' ? '' : unavailabilityStart,
+            unavailabilityEnd: finalStatus === 'disponivel' ? '' : unavailabilityEnd
         });
     }
 
+    if (maxShifts === 0) {
+        document.getElementById('person-status').value = 'indisponivel';
+        document.getElementById('unavailability-dates').style.display = 'block';
+    }
     sortPeople();
     saveState();
     saveScheduleToServer();

@@ -34,6 +34,9 @@ function setupEventListeners() {
     });
     document.getElementById('form-swap').addEventListener('submit', handleSwapRequest);
     document.getElementById('btn-add-person').addEventListener('click', function () { openPersonModal(); });
+    document.querySelectorAll('#people-filter-bar .filter-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { setPeopleFilter(btn.dataset.filter); });
+    });
     document.getElementById('btn-add-shift').addEventListener('click', function () { openShiftModal(); });
     document.querySelectorAll('.close-modal').forEach(function (button) {
         button.addEventListener('click', function (event) { event.target.closest('.modal-overlay').classList.remove('active'); });

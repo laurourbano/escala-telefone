@@ -1,3 +1,13 @@
+var peopleFilter = 'all';
+
+function setPeopleFilter(filter) {
+    peopleFilter = filter;
+    document.querySelectorAll('#people-filter-bar .filter-btn').forEach(function (btn) {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+    renderPeople();
+}
+
 function renderPeople() {
     sortPeople();
     peopleList.innerHTML = '';
@@ -5,6 +15,9 @@ function renderPeople() {
     var totalShifts = state.shifts.length;
     var days = getWorkingDays();
     state.people.forEach(function (person) {
+        var partialShifts = person.preferredShifts && person.preferredShifts.length < totalShifts;
+        if (peopleFilter === 'available' && person.status !== 'disponivel') return;
+        if (peopleFilter === 'available-partial' && person.status !== 'disponivel' && !partialShifts) return;
         var card = document.createElement('div');
         card.className = 'card';
         var isOwner = generateEmail(person.name) === 'lauro.urbano@crf-pr.org.br';
@@ -19,7 +32,6 @@ function renderPeople() {
             if (state.schedule[key].indexOf(person.id) !== -1) assignedCount++;
         }
         var noShiftsAssigned = assignedCount === 0 && person.maxShifts > 0;
-        var partialShifts = person.preferredShifts && person.preferredShifts.length < totalShifts;
         var evidenceBadge = '';
         if (person.maxShifts === 0) {
             evidenceBadge = '<span class="badge" style="background: rgba(148,163,184,0.15); border: 1px solid rgba(148,163,184,0.4); color: #94a3b8;"><i class="ph ph-x-circle"></i> 0 horários/semana</span>';
