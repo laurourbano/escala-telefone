@@ -1108,6 +1108,103 @@ function cleanScheduleConflicts() {
     return removed;
 }
 
+function generateNextWeek() {
+    if (!confirm('Avançar para a próxima semana e gerar uma nova escala? A escala atual será substituída.')) return;
+
+    const advanceDate = (dateStr, days) => {
+        const d = new Date(dateStr + 'T00:00:00');
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+    };
+
+    state.scheduleStartDate = advanceDate(state.scheduleStartDate, 7);
+    state.scheduleEndDate = advanceDate(state.scheduleEndDate, 7);
+    document.getElementById('schedule-start-date').value = state.scheduleStartDate;
+    document.getElementById('schedule-end-date').value = state.scheduleEndDate;
+    generateSchedule(true);
+}
+
+async function generateSchedule(skipConfirm) {
+    if (!skipConfirm && !confirm('Tem certeza que deseja gerar uma nova escala? A escala atual será substituída.')) return;
+
+    if (state.people.length === 0 || state.shifts.length === 0) {
+        alert("Adicione pessoas e horários primeiro!");
+        return;
+    }
+
+    document.getElementById('ai-loading').classList.remove('hidden');
+    syncConfigFromInputs();
+
+    // Snapshot current schedule as last week before generating new one
+    state.lastSchedule = JSON.parse(JSON.stringify(state.schedule));
+
+    try {
+        const provider = state.config.provider || 'openrouter';
+        let usedApi = false;
+
+        if (provider === 'openrouter' && state.config.openrouterKey) {
+            usedApi = true;
+            await callOpenRouterAPI();
+        } else if (provider === 'gemini' && state.config.geminiKey) {
+            usedApi = true;
+            await callGeminiAPI();
+        }
+
+        if (!usedApi) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            runLocalGenerationAlgorithm();
+        }
+
+        // Update cumulative shift counts for fairness tracking
+        const days = getWorkingDays();
+        state.shifts.forEach(shift => {
+            days.forEach(day => {
+                const key = `${shift.id}-${day}`;
+                const assigned = state.schedule[key] || [];
+                assigned.forEach(personId => {
+                    state.shiftCounts[personId] = (state.shiftCounts[personId] || 0) + 1;
+                });
+            });
+        });
+
+        // Remove conflicting assignments and calculate remaining gaps
+        const removed = cleanScheduleConflicts();
+        const days2 = getWorkingDays();
+        let totalUnfilled = 0;
+        state.shifts.forEach(shift => {
+            days2.forEach(day => {
+                const key = `${shift.id}-${day}`;
+                const assigned = state.schedule[key] || [];
+                totalUnfilled += Math.max(0, shift.capacity - assigned.length);
+            });
+        });
+
+        saveState();
+        // Save schedule to server so all users see it
+        saveScheduleToServer();
+        renderScheduleBoard();
+        switchTab('escala');
+
+        const selectedPersonId = document.getElementById('select-person-schedule').value;
+        if (selectedPersonId) {
+            renderPersonalSchedule(selectedPersonId);
+        }
+
+        // Show alert about results
+        if (removed > 0 || totalUnfilled > 0) {
+            let msg = '';
+            if (removed > 0) msg += `${removed} conflito${removed !== 1 ? 's' : ''} removido${removed !== 1 ? 's' : ''} (indisponíveis/mesmo dia/excesso).\n`;
+            if (totalUnfilled > 0) msg += `Faltam ~${Math.ceil(totalUnfilled / 5)} funcionário${Math.ceil(totalUnfilled / 5) !== 1 ? 's' : ''} para preencher ${totalUnfilled} vaga${totalUnfilled !== 1 ? 's' : ''}.`;
+            alert(msg);
+        }
+    } catch (e) {
+        console.error("Erro ao gerar:", e);
+        alert("Ocorreu um erro ao gerar a escala: " + e.message);
+    } finally {
+        document.getElementById('ai-loading').classList.add('hidden');
+    }
+}
+
 function buildSchedulePrompt() {
     const days = getWorkingDays();
     const peopleData = state.people.map(p => ({
