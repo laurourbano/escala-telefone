@@ -1449,12 +1449,53 @@ async function syncLoginWithServer(email, password) {
     }
 }
 
+async function ensureServerAuth() {
+    if (!state.currentUser) return false;
+    if (state.config.serverToken) return true;
+
+    const email = generateEmail(state.currentUser.name);
+    const password = state.currentUser.password || '3820';
+    const serverUrl = state.config.serverUrl || 'http://localhost:3001';
+
+    try {
+        let response = await fetch(`${serverUrl}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.status === 401) {
+            response = await fetch(`${serverUrl}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            state.config.serverToken = data.token;
+            saveState();
+            return true;
+        }
+    } catch (err) {
+        console.log('Servidor não disponível:', err);
+    }
+    return false;
+}
+
 async function saveConfigToServer() {
     const statusEl = document.getElementById('server-config-status');
+
     if (!state.config.serverToken) {
-        statusEl.innerText = 'Faça login primeiro para salvar no servidor.';
-        statusEl.style.color = 'var(--danger)';
-        return;
+        statusEl.innerText = 'Autenticando no servidor...';
+        statusEl.style.color = 'var(--text-muted)';
+        const authed = await ensureServerAuth();
+        if (!authed) {
+            statusEl.innerText = 'Não foi possível autenticar no servidor. Verifique a URL.';
+            statusEl.style.color = 'var(--danger)';
+            return;
+        }
     }
 
     try {
