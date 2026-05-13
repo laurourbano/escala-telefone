@@ -979,6 +979,7 @@ async function generateSchedule() {
     }
 
     document.getElementById('ai-loading').classList.remove('hidden');
+    syncConfigFromInputs();
 
     try {
         const provider = state.config.provider || 'openrouter';
@@ -1489,6 +1490,7 @@ async function syncLoginWithServer(email, password) {
 
 async function ensureServerAuth() {
     if (!state.currentUser) return false;
+    syncConfigFromInputs();
     if (state.config.serverToken) return true;
 
     const email = generateEmail(state.currentUser.name);
@@ -1522,6 +1524,16 @@ async function ensureServerAuth() {
     return false;
 }
 
+function syncConfigFromInputs() {
+    if (aiOpenrouterKeyInput) state.config.openrouterKey = aiOpenrouterKeyInput.value;
+    if (aiOpenrouterModelSelect) state.config.openrouterModel = aiOpenrouterModelSelect.value;
+    if (aiGeminiKeyInput) state.config.geminiKey = aiGeminiKeyInput.value;
+    if (serverUrlInput) state.config.serverUrl = serverUrlInput.value;
+    const checkedProvider = document.querySelector('input[name="ai-provider"]:checked');
+    if (checkedProvider) state.config.provider = checkedProvider.value;
+    saveState();
+}
+
 async function saveConfigToServer() {
     const statusEl = document.getElementById('server-config-status');
 
@@ -1535,6 +1547,8 @@ async function saveConfigToServer() {
             return;
         }
     }
+
+    syncConfigFromInputs();
 
     try {
         const serverUrl = state.config.serverUrl || 'http://localhost:3001';
