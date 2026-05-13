@@ -1454,9 +1454,13 @@ function handleLogin(event) {
 
     if (person) {
         state.currentUser = person;
+        state.schedule = {};
+        state.lastSchedule = {};
+        state.shiftCounts = {};
         saveState();
         checkAuth();
         errorElement.classList.add('hidden');
+        switchTab('escala');
         // Try to sync with server
         syncLoginWithServer(email, password);
     } else {
@@ -1466,9 +1470,13 @@ function handleLogin(event) {
 
 function handleLogout() {
     state.currentUser = null;
+    state.schedule = {};
+    state.lastSchedule = {};
+    state.shiftCounts = {};
     saveState();
     checkAuth();
     document.getElementById('profile-dropdown').classList.remove('active');
+    switchTab('escala');
 }
 
 function openChangePasswordModal() {
