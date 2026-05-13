@@ -1024,6 +1024,7 @@ async function callOpenRouterAPI() {
     const model = state.config.openrouterModel || 'google/gemini-2.0-flash-001';
 
     const openrouterKey = state.config.openrouterKey || (aiOpenrouterKeyInput ? aiOpenrouterKeyInput.value : '');
+    console.log('openrouterKey length:', openrouterKey ? openrouterKey.length : 0, 'preview:', openrouterKey ? openrouterKey.substring(0, 12) + '...' : 'VAZIO');
     if (!openrouterKey) {
         throw new Error('Chave da API OpenRouter não configurada. Vá em Config. IA e adicione sua chave.');
     }
@@ -1551,18 +1552,20 @@ async function loadConfigFromServer() {
 
         if (response.ok) {
             const data = await response.json();
-            state.config.openrouterKey = data.openrouter_key || '';
-            state.config.openrouterModel = data.openrouter_model || 'google/gemini-2.0-flash-001';
-            state.config.geminiKey = data.gemini_key || '';
-            state.config.provider = data.provider || 'openrouter';
+            if (data.openrouter_key) state.config.openrouterKey = data.openrouter_key;
+            if (data.openrouter_model) state.config.openrouterModel = data.openrouter_model;
+            if (data.gemini_key) state.config.geminiKey = data.gemini_key;
+            if (data.provider) state.config.provider = data.provider;
             saveState();
 
-            // Update UI
+            // Update UI (only if server had a value, otherwise keep local)
             aiOpenrouterKeyInput.value = state.config.openrouterKey;
-            aiOpenrouterModelSelect.value = state.config.openrouterModel;
+            if (data.openrouter_model) aiOpenrouterModelSelect.value = state.config.openrouterModel;
             aiGeminiKeyInput.value = state.config.geminiKey;
-            document.querySelector(`input[name="ai-provider"][value="${state.config.provider}"]`).checked = true;
-            toggleProviderConfig(state.config.provider);
+            if (data.provider) {
+                document.querySelector(`input[name="ai-provider"][value="${state.config.provider}"]`).checked = true;
+                toggleProviderConfig(state.config.provider);
+            }
 
             statusEl.innerText = 'Configuração carregada do servidor!';
             statusEl.style.color = 'var(--secondary)';
