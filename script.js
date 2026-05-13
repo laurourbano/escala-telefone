@@ -91,7 +91,6 @@ const menuButtons = document.querySelectorAll('.menu-btn');
 const peopleList = document.getElementById('people-list');
 const shiftsList = document.getElementById('shifts-list');
 const scheduleBoard = document.getElementById('schedule-board');
-const aiApiKeyInput = document.getElementById('ai-api-key');
 const aiOpenrouterKeyInput = document.getElementById('ai-openrouter-key');
 const aiOpenrouterModelSelect = document.getElementById('ai-openrouter-model');
 const aiGeminiKeyInput = document.getElementById('ai-gemini-key');
@@ -130,7 +129,6 @@ function init() {
 
     renderScheduleBoard();
     setupEventListeners();
-    aiApiKeyInput.value = state.config.apiKey;
     aiOpenrouterKeyInput.value = state.config.openrouterKey || '';
     aiOpenrouterModelSelect.value = state.config.openrouterModel || 'google/gemini-2.0-flash-001';
     aiGeminiKeyInput.value = state.config.geminiKey || '';
@@ -381,11 +379,6 @@ function setupEventListeners() {
     document.getElementById('form-shift').addEventListener('submit', saveShift);
 
     // Config
-    aiApiKeyInput.addEventListener('change', (e) => {
-        state.config.apiKey = e.target.value;
-        saveState();
-    });
-
     aiOpenrouterKeyInput.addEventListener('change', (e) => {
         state.config.openrouterKey = e.target.value;
         saveState();
