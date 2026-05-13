@@ -4,7 +4,6 @@ services:
     env: node
     region: ohio
     plan: free
-    buildCommand: npm install
     startCommand: node backend/server.js
     envVars:
       - key: JWT_SECRET
