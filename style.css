@@ -374,6 +374,16 @@ body {
     cursor: grab;
 }
 
+.card.card-no-shifts {
+    border-left: 4px solid var(--danger);
+    background: linear-gradient(90deg, rgba(239,68,68,0.06), transparent);
+}
+
+.card.card-partial-shifts {
+    border-left: 4px solid var(--warning);
+    background: linear-gradient(90deg, rgba(245,158,11,0.06), transparent);
+}
+
 .card:hover {
     border-color: rgba(255, 255, 255, 0.2);
     background-color: rgba(255, 255, 255, 0.05);
