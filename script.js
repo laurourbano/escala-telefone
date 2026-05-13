@@ -835,6 +835,32 @@ function renderScheduleBoard() {
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag',
             onEnd: function (event) {
+                const personId = event.item.dataset.personId;
+                const targetDay = event.to.dataset.day;
+                const person = state.people.find(p => p.id === personId);
+                if (!person) return;
+
+                // Check if person is already in another shift on the same day
+                const isDoubleBooked = Array.from(document.querySelectorAll('.shift-dropzone'))
+                    .filter(dz => dz.dataset.day === targetDay && dz !== event.to)
+                    .some(dz => Array.from(dz.children).some(child => child.dataset.personId === personId));
+
+                if (isDoubleBooked) {
+                    event.from.appendChild(event.item);
+                    alert('Esta pessoa já está escalada em outro turno neste dia.');
+                    return;
+                }
+
+                // Check if person would exceed maxShifts (after move, DOM is already updated)
+                const totalShifts = Array.from(document.querySelectorAll('.shift-dropzone'))
+                    .reduce((count, dz) => count + Array.from(dz.children).filter(child => child.dataset.personId === personId).length, 0);
+
+                if (totalShifts > person.maxShifts) {
+                    event.from.appendChild(event.item);
+                    alert(`${person.name} já atingiu o limite máximo de ${person.maxShifts} turno${person.maxShifts !== 1 ? 's' : ''}.`);
+                    return;
+                }
+
                 updateScheduleFromDOM();
             }
         }));
