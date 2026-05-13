@@ -1042,81 +1042,70 @@ function extractJSON(text) {
     return null;
 }
 
-function generateNextWeek() {
-    if (!confirm('Avançar para a próxima semana e gerar uma nova escala? A escala atual será substituída.')) return;
+function cleanScheduleConflicts() {
+    const days = getWorkingDays();
+    let removed = 0;
 
-    const advanceDate = (dateStr, days) => {
-        const d = new Date(dateStr + 'T00:00:00');
-        d.setDate(d.getDate() + days);
-        return d.toISOString().split('T')[0];
-    };
-
-    state.scheduleStartDate = advanceDate(state.scheduleStartDate, 7);
-    state.scheduleEndDate = advanceDate(state.scheduleEndDate, 7);
-    document.getElementById('schedule-start-date').value = state.scheduleStartDate;
-    document.getElementById('schedule-end-date').value = state.scheduleEndDate;
-    generateSchedule(true);
-}
-
-async function generateSchedule(skipConfirm) {
-    if (!skipConfirm && !confirm('Tem certeza que deseja gerar uma nova escala? A escala atual será substituída.')) return;
-
-    if (state.people.length === 0 || state.shifts.length === 0) {
-        alert("Adicione pessoas e horários primeiro!");
-        return;
-    }
-
-    document.getElementById('ai-loading').classList.remove('hidden');
-    syncConfigFromInputs();
-
-    // Snapshot current schedule as last week before generating new one
-    state.lastSchedule = JSON.parse(JSON.stringify(state.schedule));
-
-    try {
-        const provider = state.config.provider || 'openrouter';
-        let usedApi = false;
-
-        if (provider === 'openrouter' && state.config.openrouterKey) {
-            usedApi = true;
-            await callOpenRouterAPI();
-        } else if (provider === 'gemini' && state.config.geminiKey) {
-            usedApi = true;
-            await callGeminiAPI();
-        }
-
-        if (!usedApi) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            runLocalGenerationAlgorithm();
-        }
-
-        // Update cumulative shift counts for fairness tracking
-        const days = getWorkingDays();
-        state.shifts.forEach(shift => {
-            days.forEach(day => {
-                const key = `${shift.id}-${day}`;
-                const assigned = state.schedule[key] || [];
-                assigned.forEach(personId => {
-                    state.shiftCounts[personId] = (state.shiftCounts[personId] || 0) + 1;
-                });
+    // Pass 1: remove unavailable people
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            const key = `${shift.id}-${day}`;
+            const assigned = state.schedule[key] || [];
+            state.schedule[key] = assigned.filter(personId => {
+                const person = state.people.find(p => p.id === personId);
+                if (!person || isPersonUnavailable(person, day)) {
+                    removed++;
+                    return false;
+                }
+                return true;
             });
         });
+    });
 
-        saveState();
-        // Save schedule to server so all users see it
-        saveScheduleToServer();
-        renderScheduleBoard();
-        switchTab('escala');
+    // Pass 2: remove double-booked (keep only first occurrence per day)
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            const key = `${shift.id}-${day}`;
+            const assigned = state.schedule[key] || [];
+            const seen = new Set();
+            state.schedule[key] = assigned.filter(personId => {
+                if (seen.has(personId)) {
+                    removed++;
+                    return false;
+                }
+                seen.add(personId);
+                return true;
+            });
+        });
+    });
 
-        const selectedPersonId = document.getElementById('select-person-schedule').value;
-        if (selectedPersonId) {
-            renderPersonalSchedule(selectedPersonId);
-        }
-    } catch (e) {
-        console.error("Erro ao gerar:", e);
-        alert("Ocorreu um erro ao gerar a escala: " + e.message);
-    } finally {
-        document.getElementById('ai-loading').classList.add('hidden');
-    }
+    // Pass 3: remove people exceeding maxShifts
+    const personTotalCount = {};
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            const key = `${shift.id}-${day}`;
+            (state.schedule[key] || []).forEach(personId => {
+                personTotalCount[personId] = (personTotalCount[personId] || 0) + 1;
+            });
+        });
+    });
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            const key = `${shift.id}-${day}`;
+            const assigned = state.schedule[key] || [];
+            state.schedule[key] = assigned.filter(personId => {
+                const person = state.people.find(p => p.id === personId);
+                if (person && personTotalCount[personId] > person.maxShifts) {
+                    personTotalCount[personId]--;
+                    removed++;
+                    return false;
+                }
+                return true;
+            });
+        });
+    });
+
+    return removed;
 }
 
 function buildSchedulePrompt() {
