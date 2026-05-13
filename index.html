@@ -95,9 +95,54 @@
                 </div>
                 <div class="config-form">
                     <div class="form-group">
-                        <label for="ai-api-key">Chave da API (Google Gemini)</label>
-                        <input type="password" id="ai-api-key" placeholder="Cole sua API Key aqui...">
-                        <small>A chave fica salva apenas no seu navegador.</small>
+                        <label>Provedor de IA</label>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.25rem;">
+                            <label class="checkbox-label">
+                                <input type="radio" name="ai-provider" value="openrouter" checked>
+                                <span>OpenRouter</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="radio" name="ai-provider" value="gemini">
+                                <span>Gemini</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="config-openrouter">
+                        <div class="form-group">
+                            <label for="ai-openrouter-key">Chave da API (OpenRouter)</label>
+                            <input type="password" id="ai-openrouter-key" placeholder="sk-or-v1-...">
+                        </div>
+                        <div class="form-group">
+                            <label for="ai-openrouter-model">Modelo</label>
+                            <select id="ai-openrouter-model">
+                                <option value="google/gemini-2.0-flash-001">Google Gemini 2.0 Flash</option>
+                                <option value="google/gemini-2.5-flash-001">Google Gemini 2.5 Flash</option>
+                                <option value="openai/gpt-4o">OpenAI GPT-4o</option>
+                                <option value="openai/gpt-4o-mini">OpenAI GPT-4o Mini</option>
+                                <option value="anthropic/claude-sonnet-4-20250514">Claude Sonnet 4</option>
+                                <option value="anthropic/claude-haiku-4-20250514">Claude Haiku 4</option>
+                                <option value="meta-llama/llama-4-maverick">Llama 4 Maverick</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="config-gemini" style="display: none;">
+                        <div class="form-group">
+                            <label for="ai-gemini-key">Chave da API (Google Gemini)</label>
+                            <input type="password" id="ai-gemini-key" placeholder="Cole sua API Key aqui...">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <label>Servidor Online</label>
+                        <small style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Salve suas chaves no servidor para acessar de qualquer lugar.</small>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" id="server-url" value="http://localhost:3001" placeholder="URL do servidor" style="flex: 1;">
+                            <button id="btn-save-server-config" class="secondary-btn">Salvar no Servidor</button>
+                            <button id="btn-load-server-config" class="secondary-btn">Carregar</button>
+                        </div>
+                        <small id="server-config-status" style="display: block; margin-top: 0.25rem;"></small>
                     </div>
                 </div>
             </section>

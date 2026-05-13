@@ -37,7 +37,7 @@
  *  people: Person[],
  *  shifts: Shift[],
  *  schedule: Object.<string, string[]>,
- *  config: { apiKey: string },
+ *  config: { apiKey: string, openrouterKey: string, openrouterModel: string, geminiKey: string, provider: string, serverUrl: string, serverToken: string },
  *  scheduleStartDate: string,
  *  scheduleEndDate: string,
  *  closedDates: string[],
@@ -49,7 +49,7 @@ let state = {
     people: JSON.parse(localStorage.getItem('escala_people')) || [],
     shifts: JSON.parse(localStorage.getItem('escala_shifts')) || [],
     schedule: JSON.parse(localStorage.getItem('escala_schedule')) || {},
-    config: JSON.parse(localStorage.getItem('escala_config')) || { apiKey: '' },
+    config: JSON.parse(localStorage.getItem('escala_config')) || { apiKey: '', openrouterKey: '', openrouterModel: 'google/gemini-2.0-flash-001', geminiKey: '', provider: 'openrouter', serverUrl: 'http://localhost:3001', serverToken: '' },
     scheduleStartDate: localStorage.getItem('escala_start_date') || '',
     scheduleEndDate: localStorage.getItem('escala_end_date') || '',
     closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || [],
@@ -92,6 +92,14 @@ const peopleList = document.getElementById('people-list');
 const shiftsList = document.getElementById('shifts-list');
 const scheduleBoard = document.getElementById('schedule-board');
 const aiApiKeyInput = document.getElementById('ai-api-key');
+const aiOpenrouterKeyInput = document.getElementById('ai-openrouter-key');
+const aiOpenrouterModelSelect = document.getElementById('ai-openrouter-model');
+const aiGeminiKeyInput = document.getElementById('ai-gemini-key');
+const providerRadios = document.querySelectorAll('input[name="ai-provider"]');
+const serverUrlInput = document.getElementById('server-url');
+const btnSaveServer = document.getElementById('btn-save-server-config');
+const btnLoadServer = document.getElementById('btn-load-server-config');
+const serverConfigStatus = document.getElementById('server-config-status');
 
 const scheduleStartDateInput = document.getElementById('schedule-start-date');
 const scheduleEndDateInput = document.getElementById('schedule-end-date');
@@ -123,6 +131,16 @@ function init() {
     renderScheduleBoard();
     setupEventListeners();
     aiApiKeyInput.value = state.config.apiKey;
+    aiOpenrouterKeyInput.value = state.config.openrouterKey || '';
+    aiOpenrouterModelSelect.value = state.config.openrouterModel || 'google/gemini-2.0-flash-001';
+    aiGeminiKeyInput.value = state.config.geminiKey || '';
+    serverUrlInput.value = state.config.serverUrl || 'http://localhost:3001';
+
+    // Set provider radio
+    const provider = state.config.provider || 'openrouter';
+    document.querySelector(`input[name="ai-provider"][value="${provider}"]`).checked = true;
+    toggleProviderConfig(provider);
+
     validateSchedule();
     populatePersonSelect();
     checkAuth();
@@ -147,6 +165,11 @@ function checkAuth() {
         document.getElementById('login-overlay').classList.add('active');
         document.getElementById('topbar-user-actions').style.display = 'none';
     }
+}
+
+function toggleProviderConfig(provider) {
+    document.getElementById('config-openrouter').style.display = provider === 'openrouter' ? 'block' : 'none';
+    document.getElementById('config-gemini').style.display = provider === 'gemini' ? 'block' : 'none';
 }
 
 // Sort shifts by start time and name
@@ -231,14 +254,6 @@ function calculateDefaultEndDate(startDateStr) {
         }
     }
     return current.toISOString().split('T')[0];
-}
-
-function toTitleCase(text) {
-    if (!text) return '';
-    return text.toLowerCase().split(/\s+/).map(word => {
-        if (word.length === 0) return '';
-        return word.charAt(0).toUpperCase() + word.slice(1);
-    }).join(' ');
 }
 
 function formatDate(dateStr) {
@@ -370,6 +385,37 @@ function setupEventListeners() {
         state.config.apiKey = e.target.value;
         saveState();
     });
+
+    aiOpenrouterKeyInput.addEventListener('change', (e) => {
+        state.config.openrouterKey = e.target.value;
+        saveState();
+    });
+
+    aiOpenrouterModelSelect.addEventListener('change', (e) => {
+        state.config.openrouterModel = e.target.value;
+        saveState();
+    });
+
+    aiGeminiKeyInput.addEventListener('change', (e) => {
+        state.config.geminiKey = e.target.value;
+        saveState();
+    });
+
+    providerRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            state.config.provider = e.target.value;
+            toggleProviderConfig(e.target.value);
+            saveState();
+        });
+    });
+
+    serverUrlInput.addEventListener('change', (e) => {
+        state.config.serverUrl = e.target.value;
+        saveState();
+    });
+
+    btnSaveServer.addEventListener('click', saveConfigToServer);
+    btnLoadServer.addEventListener('click', loadConfigFromServer);
 
     scheduleStartDateInput.addEventListener('change', (e) => {
         const newDate = e.target.value;
@@ -906,31 +952,227 @@ async function generateSchedule() {
     document.getElementById('ai-loading').classList.remove('hidden');
 
     try {
-        if (state.config.apiKey) {
-            // Placeholder para chamada da API do Gemini
-            // await callGeminiAPI();
-            console.log("Usaria a API do Gemini com a chave:", state.config.apiKey);
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Simula delay
-            runLocalGenerationAlgorithm();
-        } else {
-            // Local fallback algorithm
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay for effect
+        const provider = state.config.provider || 'openrouter';
+        let usedApi = false;
+
+        if (provider === 'openrouter' && state.config.openrouterKey) {
+            usedApi = true;
+            await callOpenRouterAPI();
+        } else if (provider === 'gemini' && state.config.geminiKey) {
+            usedApi = true;
+            await callGeminiAPI();
+        }
+
+        if (!usedApi) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
             runLocalGenerationAlgorithm();
         }
 
         saveState();
         renderScheduleBoard();
 
-        // Refresh personal schedule if a person is selected
         const selectedPersonId = document.getElementById('select-person-schedule').value;
         if (selectedPersonId) {
             renderPersonalSchedule(selectedPersonId);
         }
     } catch (e) {
         console.error("Erro ao gerar:", e);
-        alert("Ocorreu um erro ao gerar a escala.");
+        alert("Ocorreu um erro ao gerar a escala: " + e.message);
     } finally {
         document.getElementById('ai-loading').classList.add('hidden');
+    }
+}
+
+function buildSchedulePrompt() {
+    const days = getWorkingDays();
+    const peopleData = state.people.map(p => ({
+        id: p.id,
+        name: p.name,
+        status: p.status,
+        unavailabilityStart: p.unavailabilityStart || null,
+        unavailabilityEnd: p.unavailabilityEnd || null,
+        maxShifts: p.maxShifts,
+        preferredShifts: p.preferredShifts
+    }));
+
+    const shiftsData = state.shifts.map(s => ({
+        id: s.id,
+        name: s.name,
+        time: s.time,
+        capacity: s.capacity
+    }));
+
+    return {
+        days,
+        people: peopleData,
+        shifts: shiftsData,
+        closedDates: state.closedDates,
+        rules: {
+            noWeekends: true,
+            respectCapacity: true,
+            respectMaxShifts: true,
+            respectUnavailability: true,
+            preferPreferredShifts: true,
+            balanceDistribution: true,
+            noDuplicatesPerDay: true
+        }
+    };
+}
+
+async function callOpenRouterAPI() {
+    const promptData = buildSchedulePrompt();
+    const model = state.config.openrouterModel || 'google/gemini-2.0-flash-001';
+
+    const systemPrompt = `Você é um gerador de escala de trabalho. Distribua as pessoas nos turnos respeitando todas as regras abaixo.
+
+Regras:
+1. São dias úteis (seg-sex), ignorar finais de semana e feriados
+2. Respeitar a capacidade máxima de cada turno
+3. Respeitar o máximo de turnos por pessoa (maxShifts)
+4. Não escalar pessoa que está em período de indisponibilidade (status !== disponivel OU data dentro do período unavailabilityStart-unavailabilityEnd)
+5. Preferir turnos preferenciais de cada pessoa (preferredShifts)
+6. Distribuir a carga de forma equilibrada entre as pessoas
+7. Uma pessoa NÃO pode estar em dois turnos diferentes no mesmo dia
+8. A pessoa pode ficar vaga se não houver candidatos disponíveis
+
+Responda APENAS com JSON válido no formato:
+{"assignments":[{"shiftId":"id_do_turno","day":"YYYY-MM-DD","peopleIds":["id_da_pessoa1","id_da_pessoa2"]}]}
+
+NÃO inclua texto, explicação ou markdown além do JSON.`;
+
+    const userPrompt = JSON.stringify(promptData, null, 2);
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.config.openrouterKey}`,
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'EscalAI'
+        },
+        body: JSON.stringify({
+            model: model,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.3,
+            max_tokens: 4000
+        })
+    });
+
+    if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`OpenRouter error ${response.status}: ${errBody}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content.trim();
+
+    // Remove markdown code block if present
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || content.match(/{[\s\S]*?}/);
+    const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content;
+
+    let result;
+    try {
+        result = JSON.parse(jsonStr);
+    } catch {
+        throw new Error('Resposta da IA não foi um JSON válido: ' + content.substring(0, 200));
+    }
+
+    // Clear current schedule
+    const days = getWorkingDays();
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            state.schedule[`${shift.id}-${day}`] = [];
+        });
+    });
+
+    // Apply assignments
+    if (result.assignments && Array.isArray(result.assignments)) {
+        result.assignments.forEach(assignment => {
+            const key = `${assignment.shiftId}-${assignment.day}`;
+            if (!state.schedule[key]) state.schedule[key] = [];
+            if (Array.isArray(assignment.peopleIds)) {
+                assignment.peopleIds.forEach(personId => {
+                    if (state.people.some(p => p.id === personId) && !state.schedule[key].includes(personId)) {
+                        state.schedule[key].push(personId);
+                    }
+                });
+            }
+        });
+    }
+}
+
+async function callGeminiAPI() {
+    const promptData = buildSchedulePrompt();
+
+    const prompt = `Você é um gerador de escala de trabalho. Distribua as pessoas nos turnos respeitando todas as regras abaixo.
+
+Regras:
+1. São dias úteis (seg-sex), ignorar finais de semana e feriados
+2. Respeitar a capacidade máxima de cada turno
+3. Respeitar o máximo de turnos por pessoa (maxShifts)
+4. Não escalar pessoa que está em período de indisponibilidade
+5. Preferir turnos preferenciais de cada pessoa (preferredShifts)
+6. Distribuir a carga de forma equilibrada entre as pessoas
+7. Uma pessoa NÃO pode estar em dois turnos diferentes no mesmo dia
+8. A pessoa pode ficar vaga se não houver candidatos disponíveis
+
+Dados:
+${JSON.stringify(promptData, null, 2)}
+
+Responda APENAS com JSON válido no formato:
+{"assignments":[{"shiftId":"id_do_turno","day":"YYYY-MM-DD","peopleIds":["id_da_pessoa1","id_da_pessoa2"]}]}
+
+NÃO inclua texto, explicação ou markdown além do JSON.`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${state.config.geminiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 4000 }
+        })
+    });
+
+    if (!response.ok) {
+        const errBody = await response.text();
+        throw new Error(`Gemini error ${response.status}: ${errBody}`);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/{[\s\S]*?}/);
+    const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : text;
+
+    let result;
+    try {
+        result = JSON.parse(jsonStr);
+    } catch {
+        throw new Error('Resposta da Gemini não foi um JSON válido: ' + text.substring(0, 200));
+    }
+
+    const days = getWorkingDays();
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            state.schedule[`${shift.id}-${day}`] = [];
+        });
+    });
+
+    if (result.assignments && Array.isArray(result.assignments)) {
+        result.assignments.forEach(assignment => {
+            const key = `${assignment.shiftId}-${assignment.day}`;
+            if (!state.schedule[key]) state.schedule[key] = [];
+            if (Array.isArray(assignment.peopleIds)) {
+                assignment.peopleIds.forEach(personId => {
+                    if (state.people.some(p => p.id === personId) && !state.schedule[key].includes(personId)) {
+                        state.schedule[key].push(personId);
+                    }
+                });
+            }
+        });
     }
 }
 
@@ -1122,6 +1364,8 @@ function handleLogin(event) {
         saveState();
         checkAuth();
         errorElement.classList.add('hidden');
+        // Try to sync with server
+        syncLoginWithServer(email, password);
     } else {
         errorElement.classList.remove('hidden');
     }
@@ -1169,6 +1413,119 @@ function handleChangePassword(event) {
             document.getElementById('modal-change-password').classList.remove('active');
             alert("Senha alterada com sucesso!");
         }
+    }
+}
+
+// Server Sync Functions
+async function syncLoginWithServer(email, password) {
+    try {
+        const serverUrl = state.config.serverUrl || 'http://localhost:3001';
+        // Try to login
+        let response = await fetch(`${serverUrl}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.status === 401) {
+            // Try to register
+            response = await fetch(`${serverUrl}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            state.config.serverToken = data.token;
+            state.config.serverUrl = serverUrl;
+            saveState();
+            // Load config from server
+            loadConfigFromServer();
+        }
+    } catch (err) {
+        console.log('Servidor não disponível, usando apenas local.');
+    }
+}
+
+async function saveConfigToServer() {
+    const statusEl = document.getElementById('server-config-status');
+    if (!state.config.serverToken) {
+        statusEl.innerText = 'Faça login primeiro para salvar no servidor.';
+        statusEl.style.color = 'var(--danger)';
+        return;
+    }
+
+    try {
+        const serverUrl = state.config.serverUrl || 'http://localhost:3001';
+        const response = await fetch(`${serverUrl}/api/config`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.config.serverToken}`
+            },
+            body: JSON.stringify({
+                openrouter_key: state.config.openrouterKey || '',
+                openrouter_model: state.config.openrouterModel || 'google/gemini-2.0-flash-001',
+                gemini_key: state.config.geminiKey || '',
+                provider: state.config.provider || 'openrouter'
+            })
+        });
+
+        if (response.ok) {
+            statusEl.innerText = 'Configuração salva no servidor!';
+            statusEl.style.color = 'var(--secondary)';
+        } else if (response.status === 401) {
+            state.config.serverToken = '';
+            saveState();
+            statusEl.innerText = 'Sessão expirada. Faça login novamente.';
+            statusEl.style.color = 'var(--danger)';
+        } else {
+            statusEl.innerText = 'Erro ao salvar no servidor.';
+            statusEl.style.color = 'var(--danger)';
+        }
+    } catch (err) {
+        statusEl.innerText = 'Servidor não disponível.';
+        statusEl.style.color = 'var(--danger)';
+    }
+}
+
+async function loadConfigFromServer() {
+    const statusEl = document.getElementById('server-config-status');
+    if (!state.config.serverToken) return;
+
+    try {
+        const serverUrl = state.config.serverUrl || 'http://localhost:3001';
+        const response = await fetch(`${serverUrl}/api/config`, {
+            headers: {
+                'Authorization': `Bearer ${state.config.serverToken}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            state.config.openrouterKey = data.openrouter_key || '';
+            state.config.openrouterModel = data.openrouter_model || 'google/gemini-2.0-flash-001';
+            state.config.geminiKey = data.gemini_key || '';
+            state.config.provider = data.provider || 'openrouter';
+            saveState();
+
+            // Update UI
+            aiOpenrouterKeyInput.value = state.config.openrouterKey;
+            aiOpenrouterModelSelect.value = state.config.openrouterModel;
+            aiGeminiKeyInput.value = state.config.geminiKey;
+            document.querySelector(`input[name="ai-provider"][value="${state.config.provider}"]`).checked = true;
+            toggleProviderConfig(state.config.provider);
+
+            statusEl.innerText = 'Configuração carregada do servidor!';
+            statusEl.style.color = 'var(--secondary)';
+        } else if (response.status === 401) {
+            state.config.serverToken = '';
+            saveState();
+        }
+    } catch (err) {
+        console.log('Servidor não disponível para carregar config.');
     }
 }
 
@@ -1679,4 +2036,9 @@ function exportSchedulePDF() {
     };
 
     document.body.removeChild(container);
+}
+
+// Exports for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { toTitleCase, generateEmail, calculateDefaultEndDate, getFirstName };
 }
