@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { getDb, saveDb } = require('../database');
+const { query } = require('../database');
 const { authMiddleware, generateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -13,18 +13,14 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
 
-    const db = await getDb();
-    const existing = db.exec(`SELECT email FROM users WHERE email = '${email.replace(/'/g, "''")}'`);
-    
-    if (existing.length > 0 && existing[0].values.length > 0) {
+    const existing = await query('SELECT email FROM users WHERE email = $1', [email]);
+    if (existing.rows.length > 0) {
       return res.status(409).json({ error: 'Usuário já existe' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const safeEmail = email.replace(/'/g, "''");
-    db.run(`INSERT INTO users (email, password) VALUES ('${safeEmail}', '${hashedPassword.replace(/'/g, "''")}')`);
-    db.run(`INSERT INTO configs (email) VALUES ('${safeEmail}')`);
-    saveDb();
+    await query('INSERT INTO users (email, password) VALUES ($1, $2)', [email, hashedPassword]);
+    await query('INSERT INTO configs (email) VALUES ($1) ON CONFLICT DO NOTHING', [email]);
 
     const token = generateToken(email);
     res.status(201).json({ token, email });
@@ -42,20 +38,13 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email e senha são obrigatórios' });
     }
 
-    const db = await getDb();
-    const safeEmail = email.replace(/'/g, "''");
-    const result = db.exec(`SELECT * FROM users WHERE email = '${safeEmail}'`);
-
-    if (result.length === 0 || result[0].values.length === 0) {
+    const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    const row = result[0].values[0];
-    const columns = result[0].columns;
-    const emailIdx = columns.indexOf('email');
-    const passIdx = columns.indexOf('password');
-
-    const match = await bcrypt.compare(password, row[passIdx]);
+    const user = result.rows[0];
+    const match = await bcrypt.compare(password, user.password);
     if (!match) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
@@ -71,13 +60,10 @@ router.post('/login', async (req, res) => {
 // GET /api/config — obter config do usuário logado
 router.get('/config', authMiddleware, async (req, res) => {
   try {
-    const db = await getDb();
-    const safeEmail = req.userEmail.replace(/'/g, "''");
-    const result = db.exec(`SELECT * FROM configs WHERE email = '${safeEmail}'`);
+    const result = await query('SELECT * FROM configs WHERE email = $1', [req.userEmail]);
 
-    if (result.length === 0 || result[0].values.length === 0) {
-      db.run(`INSERT INTO configs (email) VALUES ('${safeEmail}')`);
-      saveDb();
+    if (result.rows.length === 0) {
+      await query('INSERT INTO configs (email) VALUES ($1) ON CONFLICT DO NOTHING', [req.userEmail]);
       return res.json({
         openrouter_key: '',
         openrouter_model: 'google/gemini-2.0-flash-001',
@@ -86,11 +72,7 @@ router.get('/config', authMiddleware, async (req, res) => {
       });
     }
 
-    const row = result[0].values[0];
-    const columns = result[0].columns;
-    const config = {};
-    columns.forEach((col, idx) => { config[col] = row[idx]; });
-    res.json(config);
+    res.json(result.rows[0]);
   } catch (err) {
     console.error('Get config error:', err);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -101,34 +83,23 @@ router.get('/config', authMiddleware, async (req, res) => {
 router.put('/config', authMiddleware, async (req, res) => {
   try {
     const { openrouter_key, openrouter_model, gemini_key, provider } = req.body;
-    const db = await getDb();
-    const safeEmail = req.userEmail.replace(/'/g, "''");
 
-    const existing = db.exec(`SELECT email FROM configs WHERE email = '${safeEmail}'`);
+    await query(`
+      INSERT INTO configs (email, openrouter_key, openrouter_model, gemini_key, provider)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (email) DO UPDATE SET
+        openrouter_key = EXCLUDED.openrouter_key,
+        openrouter_model = EXCLUDED.openrouter_model,
+        gemini_key = EXCLUDED.gemini_key,
+        provider = EXCLUDED.provider
+    `, [
+      req.userEmail,
+      openrouter_key || '',
+      openrouter_model || 'google/gemini-2.0-flash-001',
+      gemini_key || '',
+      provider || 'openrouter'
+    ]);
 
-    if (existing.length > 0 && existing[0].values.length > 0) {
-      db.run(`
-        UPDATE configs SET
-          openrouter_key = '${(openrouter_key || '').replace(/'/g, "''")}',
-          openrouter_model = '${(openrouter_model || 'google/gemini-2.0-flash-001').replace(/'/g, "''")}',
-          gemini_key = '${(gemini_key || '').replace(/'/g, "''")}',
-          provider = '${(provider || 'openrouter').replace(/'/g, "''")}'
-        WHERE email = '${safeEmail}'
-      `);
-    } else {
-      db.run(`
-        INSERT INTO configs (email, openrouter_key, openrouter_model, gemini_key, provider)
-        VALUES (
-          '${safeEmail}',
-          '${(openrouter_key || '').replace(/'/g, "''")}',
-          '${(openrouter_model || 'google/gemini-2.0-flash-001').replace(/'/g, "''")}',
-          '${(gemini_key || '').replace(/'/g, "''")}',
-          '${(provider || 'openrouter').replace(/'/g, "''")}'
-        )
-      `);
-    }
-
-    saveDb();
     res.json({ message: 'Configuração salva com sucesso' });
   } catch (err) {
     console.error('Save config error:', err);
