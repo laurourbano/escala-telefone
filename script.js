@@ -494,6 +494,7 @@ function setupEventListeners() {
 
     // Actions
     document.getElementById('btn-generate').addEventListener('click', generateSchedule);
+    document.getElementById('btn-next-week').addEventListener('click', generateNextWeek);
     document.getElementById('btn-export').addEventListener('click', exportSchedulePDF);
 
     document.getElementById('select-person-schedule').addEventListener('change', (e) => {
@@ -979,6 +980,20 @@ function extractJSON(text) {
     }
 
     return null;
+}
+
+function generateNextWeek() {
+    const advanceDate = (dateStr, days) => {
+        const d = new Date(dateStr + 'T00:00:00');
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+    };
+
+    state.scheduleStartDate = advanceDate(state.scheduleStartDate, 7);
+    state.scheduleEndDate = advanceDate(state.scheduleEndDate, 7);
+    document.getElementById('schedule-start-date').value = state.scheduleStartDate;
+    document.getElementById('schedule-end-date').value = state.scheduleEndDate;
+    generateSchedule();
 }
 
 async function generateSchedule() {
