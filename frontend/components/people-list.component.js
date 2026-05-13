@@ -16,7 +16,7 @@ function renderPeople() {
     var days = getWorkingDays();
     state.people.forEach(function (person) {
         var partialShifts = person.maxShifts > 0 && person.preferredShifts && person.preferredShifts.length < totalShifts;
-        if (peopleFilter === 'available' && person.status !== 'disponivel') return;
+        if (peopleFilter === 'available' && (person.status !== 'disponivel' || partialShifts)) return;
         if (peopleFilter === 'available-partial' && person.status !== 'disponivel' && !partialShifts) return;
         if (peopleFilter === 'indisponivel' && person.status !== 'indisponivel') return;
         if (peopleFilter === 'afastados' && person.status !== 'folga' && person.status !== 'ferias' && person.status !== 'atestado') return;
