@@ -943,6 +943,35 @@ function highlightPerson(shiftId, day, personId, className) {
 }
 
 // AI Generation (Mock logic for local generation, prepared for API)
+function extractJSON(text) {
+    const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlock) return codeBlock[1].trim();
+
+    const start = text.indexOf('{');
+    if (start === -1) return null;
+
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+
+    for (let i = start; i < text.length; i++) {
+        const char = text[i];
+
+        if (escaped) { escaped = false; continue; }
+        if (char === '\\' && inString) { escaped = true; continue; }
+        if (char === '"') { inString = !inString; continue; }
+        if (inString) continue;
+
+        if (char === '{') depth++;
+        else if (char === '}') {
+            depth--;
+            if (depth === 0) return text.substring(start, i + 1);
+        }
+    }
+
+    return null;
+}
+
 async function generateSchedule() {
     if (state.people.length === 0 || state.shifts.length === 0) {
         alert("Adicione pessoas e horários primeiro!");
@@ -1075,15 +1104,16 @@ NÃO inclua texto, explicação ou markdown além do JSON.`;
     const data = await response.json();
     const content = data.choices[0].message.content.trim();
 
-    // Remove markdown code block if present
-    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/) || content.match(/{[\s\S]*?}/);
-    const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : content;
+    const jsonStr = extractJSON(content);
+    if (!jsonStr) {
+        throw new Error('Resposta da IA não conteve JSON válido: ' + content.substring(0, 200));
+    }
 
     let result;
     try {
         result = JSON.parse(jsonStr);
     } catch {
-        throw new Error('Resposta da IA não foi um JSON válido: ' + content.substring(0, 200));
+        throw new Error('Resposta da IA não foi um JSON válido: ' + jsonStr.substring(0, 200));
     }
 
     // Clear current schedule
@@ -1150,14 +1180,16 @@ NÃO inclua texto, explicação ou markdown além do JSON.`;
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) || text.match(/{[\s\S]*?}/);
-    const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : text;
+    const jsonStr = extractJSON(text);
+    if (!jsonStr) {
+        throw new Error('Resposta da IA não conteve JSON válido: ' + text.substring(0, 200));
+    }
 
     let result;
     try {
         result = JSON.parse(jsonStr);
     } catch {
-        throw new Error('Resposta da Gemini não foi um JSON válido: ' + text.substring(0, 200));
+        throw new Error('Resposta da IA não foi um JSON válido: ' + jsonStr.substring(0, 200));
     }
 
     const days = getWorkingDays();
