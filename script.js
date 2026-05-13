@@ -148,6 +148,8 @@ function init() {
     validateSchedule();
     populatePersonSelect();
     checkAuth();
+    // Load shared schedule from server if already logged in
+    loadScheduleFromServer().catch(() => {});
 }
 
 function checkAuth() {
@@ -1045,6 +1047,8 @@ async function generateSchedule(skipConfirm) {
         });
 
         saveState();
+        // Save schedule to server so all users see it
+        saveScheduleToServer();
         renderScheduleBoard();
         switchTab('escala');
 
@@ -1461,9 +1465,6 @@ function handleLogin(event) {
 
     if (person) {
         state.currentUser = person;
-        state.schedule = {};
-        state.lastSchedule = {};
-        state.shiftCounts = {};
         saveState();
         checkAuth();
         errorElement.classList.add('hidden');
@@ -1477,9 +1478,6 @@ function handleLogin(event) {
 
 function handleLogout() {
     state.currentUser = null;
-    state.schedule = {};
-    state.lastSchedule = {};
-    state.shiftCounts = {};
     saveState();
     checkAuth();
     document.getElementById('profile-dropdown').classList.remove('active');
@@ -1551,6 +1549,8 @@ async function syncLoginWithServer(email, password) {
             saveState();
             // Load config from server
             loadConfigFromServer();
+            // Load shared schedule from server
+            loadScheduleFromServer();
         }
     } catch (err) {
         console.log('Servidor não disponível, usando apenas local.');
@@ -1690,6 +1690,59 @@ async function loadConfigFromServer() {
         }
     } catch (err) {
         console.log('Servidor não disponível para carregar config.');
+    }
+}
+
+async function saveScheduleToServer() {
+    if (!state.config.serverToken) {
+        const authed = await ensureServerAuth();
+        if (!authed) return;
+    }
+
+    try {
+        const serverUrl = state.config.serverUrl || 'http://localhost:3001';
+        await fetch(`${serverUrl}/api/schedule`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.config.serverToken}`
+            },
+            body: JSON.stringify({
+                schedule: state.schedule,
+                start_date: state.scheduleStartDate,
+                end_date: state.scheduleEndDate,
+                people: state.people,
+                shifts: state.shifts
+            })
+        });
+    } catch (err) {
+        console.log('Servidor não disponível para salvar escala.');
+    }
+}
+
+async function loadScheduleFromServer() {
+    if (!state.config.serverToken) return;
+
+    try {
+        const serverUrl = state.config.serverUrl || 'http://localhost:3001';
+        const response = await fetch(`${serverUrl}/api/schedule`, {
+            headers: {
+                'Authorization': `Bearer ${state.config.serverToken}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.schedule && Object.keys(data.schedule).length > 0) {
+                state.schedule = data.schedule;
+                if (data.start_date) state.scheduleStartDate = data.start_date;
+                if (data.end_date) state.scheduleEndDate = data.end_date;
+                saveState();
+                renderScheduleBoard();
+            }
+        }
+    } catch (err) {
+        console.log('Servidor não disponível para carregar escala.');
     }
 }
 

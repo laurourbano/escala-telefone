@@ -107,4 +107,49 @@ router.put('/config', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/schedule — obter a escala compartilhada
+router.get('/schedule', authMiddleware, async (req, res) => {
+  try {
+    const result = await query('SELECT schedule, start_date, end_date, people, shifts, updated_by, updated_at FROM schedules WHERE id = 1');
+    if (result.rows.length === 0) {
+      return res.json({ schedule: {}, start_date: '', end_date: '', people: [], shifts: [] });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Get schedule error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// PUT /api/schedule — salvar a escala compartilhada
+router.put('/schedule', authMiddleware, async (req, res) => {
+  try {
+    const { schedule, start_date, end_date, people, shifts } = req.body;
+
+    await query(`
+      UPDATE schedules SET
+        schedule = $1,
+        start_date = $2,
+        end_date = $3,
+        people = $4,
+        shifts = $5,
+        updated_by = $6,
+        updated_at = NOW()
+      WHERE id = 1
+    `, [
+      JSON.stringify(schedule || {}),
+      start_date || '',
+      end_date || '',
+      JSON.stringify(people || []),
+      JSON.stringify(shifts || []),
+      req.userEmail
+    ]);
+
+    res.json({ message: 'Escala salva com sucesso' });
+  } catch (err) {
+    console.error('Save schedule error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;

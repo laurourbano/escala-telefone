@@ -30,6 +30,24 @@ async function initTables() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schedules (
+        id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        schedule JSONB DEFAULT '{}',
+        start_date TEXT DEFAULT '',
+        end_date TEXT DEFAULT '',
+        people JSONB DEFAULT '[]',
+        shifts JSONB DEFAULT '[]',
+        updated_by TEXT DEFAULT '',
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Ensure the single row exists
+    await client.query(`
+      INSERT INTO schedules (id) VALUES (1) ON CONFLICT (id) DO NOTHING
+    `);
+
     console.log('Tabelas verificadas/criadas com sucesso.');
   } finally {
     client.release();
