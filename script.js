@@ -940,25 +940,41 @@ function validateSchedule() {
     }
 
     const statusElement = document.getElementById('validation-status');
-    let unfilledCount = 0;
+
+    // Count unfilled slots per day and total
+    const unfilledPerDay = {};
+    let totalUnfilled = 0;
     state.shifts.forEach(shift => {
         days.forEach(day => {
-            const dayKey = `${shift.id}-${day}`;
-            const scheduledIds = state.schedule[dayKey] || [];
-            unfilledCount += Math.max(0, shift.capacity - scheduledIds.length);
+            const key = `${shift.id}-${day}`;
+            const assigned = state.schedule[key] || [];
+            const unfilled = Math.max(0, shift.capacity - assigned.length);
+            unfilledPerDay[day] = (unfilledPerDay[day] || 0) + unfilled;
+            totalUnfilled += unfilled;
         });
     });
 
+    // Calculate how many additional employees are needed
+    // Each person: max 1 shift/day, default maxShifts=5
+    const maxUnfilledPerDay = Math.max(...Object.values(unfilledPerDay), 0);
+    const defaultMaxShifts = 5;
+    const minByDay = maxUnfilledPerDay;
+    const minByTotal = Math.ceil(totalUnfilled / defaultMaxShifts);
+    const missingEmployees = Math.max(minByDay, minByTotal);
+
+    let statusHtml = '';
     if (hasError) {
-        statusElement.innerHTML = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos (2 no mesmo dia / Excesso / Atestado)</span>';
+        statusHtml = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos (2 no mesmo dia / Excesso / Atestado)</span>';
     } else if (hasWarning) {
-        statusElement.innerHTML = '<span class="status-badge warning"><i class="ph ph-warning"></i> Distribuição Desbalanceada</span>';
+        statusHtml = '<span class="status-badge warning"><i class="ph ph-warning"></i> Distribuição Desbalanceada</span>';
     } else {
-        statusElement.innerHTML = '<span class="status-badge success"><i class="ph ph-check-circle"></i> Equilibrado</span>';
+        statusHtml = '<span class="status-badge success"><i class="ph ph-check-circle"></i> Equilibrado</span>';
     }
 
-    if (unfilledCount > 0) {
-        statusElement.innerHTML += `<span class="status-badge warning" style="margin-left:8px"><i class="ph ph-users"></i> Faltam ${unfilledCount} funcionário${unfilledCount !== 1 ? 's' : ''}</span>`;
+    statusElement.innerHTML = statusHtml;
+
+    if (totalUnfilled > 0) {
+        statusElement.innerHTML += `<span class="status-badge warning" style="margin-left:8px"><i class="ph ph-users"></i> Faltam ~${missingEmployees} funcionário${missingEmployees !== 1 ? 's' : ''} (${totalUnfilled} vaga${totalUnfilled !== 1 ? 's' : ''})</span>`;
     }
 }
 
