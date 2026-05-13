@@ -4,6 +4,7 @@ function deleteShift(id) {
     const days = getWorkingDays();
     days.forEach(day => delete state.schedule[`${id}-${day}`]);
     saveState();
+    saveScheduleToServer();
     renderShifts();
     renderScheduleBoard();
 }

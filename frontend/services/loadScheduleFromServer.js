@@ -16,6 +16,16 @@ async function loadScheduleFromServer() {
                 saveState();
                 renderScheduleBoard();
             }
+            if (data.people && data.people.length > 0) {
+                state.people = data.people;
+                saveState();
+                renderPeople();
+            }
+            if (data.shifts && data.shifts.length > 0) {
+                state.shifts = data.shifts;
+                saveState();
+                renderShifts();
+            }
         }
     } catch (err) {
         console.log('Servidor não disponível para carregar escala.');

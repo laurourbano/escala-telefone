@@ -21,7 +21,10 @@ function renderPeople() {
         var noShiftsAssigned = assignedCount === 0 && person.maxShifts > 0;
         var partialShifts = person.preferredShifts && person.preferredShifts.length < totalShifts;
         var evidenceBadge = '';
-        if (noShiftsAssigned) {
+        if (person.maxShifts === 0) {
+            evidenceBadge = '<span class="badge" style="background: rgba(148,163,184,0.15); border: 1px solid rgba(148,163,184,0.4); color: #94a3b8;"><i class="ph ph-x-circle"></i> 0 horários/semana</span>';
+            card.classList.add('card-zero-shifts');
+        } else if (noShiftsAssigned) {
             evidenceBadge = '<span class="badge" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: var(--danger);"><i class="ph ph-warning-circle"></i> Sem turnos</span>';
             card.classList.add('card-no-shifts');
         } else if (partialShifts) {

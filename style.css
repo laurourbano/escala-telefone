@@ -374,6 +374,11 @@ body {
     cursor: grab;
 }
 
+.card.card-zero-shifts {
+    border-left: 4px solid #94a3b8;
+    background: linear-gradient(90deg, rgba(148,163,184,0.06), transparent);
+}
+
 .card.card-no-shifts {
     border-left: 4px solid var(--danger);
     background: linear-gradient(90deg, rgba(239,68,68,0.06), transparent);

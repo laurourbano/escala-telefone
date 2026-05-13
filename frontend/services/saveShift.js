@@ -3,7 +3,8 @@ function saveShift(event) {
     const id = document.getElementById('shift-id').value;
     const name = document.getElementById('shift-name').value.trim();
     const time = document.getElementById('shift-time').value;
-    const capacity = parseInt(document.getElementById('shift-capacity').value) || 2;
+    var capVal = parseInt(document.getElementById('shift-capacity').value);
+    const capacity = isNaN(capVal) ? 2 : capVal;
 
     if (!name || !time) { alert('Nome e horário são obrigatórios.'); return; }
 
@@ -25,6 +26,7 @@ function saveShift(event) {
 
     sortShifts();
     saveState();
+    saveScheduleToServer();
     renderShifts();
     renderScheduleBoard();
     document.getElementById('modal-shift').classList.remove('active');

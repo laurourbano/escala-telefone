@@ -5,6 +5,7 @@ function deletePerson(id) {
         state.schedule[key] = state.schedule[key].filter(pid => pid !== id);
     });
     saveState();
+    saveScheduleToServer();
     renderPeople();
     renderScheduleBoard();
 }
