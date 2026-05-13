@@ -386,7 +386,7 @@ function setupEventListeners() {
     document.getElementById('form-shift').addEventListener('submit', saveShift);
 
     // Config
-    aiOpenrouterKeyInput.addEventListener('change', (e) => {
+    aiOpenrouterKeyInput.addEventListener('input', (e) => {
         state.config.openrouterKey = e.target.value;
         saveState();
     });
@@ -396,7 +396,7 @@ function setupEventListeners() {
         saveState();
     });
 
-    aiGeminiKeyInput.addEventListener('change', (e) => {
+    aiGeminiKeyInput.addEventListener('input', (e) => {
         state.config.geminiKey = e.target.value;
         saveState();
     });
@@ -1023,6 +1023,11 @@ async function callOpenRouterAPI() {
     const promptData = buildSchedulePrompt();
     const model = state.config.openrouterModel || 'google/gemini-2.0-flash-001';
 
+    const openrouterKey = state.config.openrouterKey || (aiOpenrouterKeyInput ? aiOpenrouterKeyInput.value : '');
+    if (!openrouterKey) {
+        throw new Error('Chave da API OpenRouter não configurada. Vá em Config. IA e adicione sua chave.');
+    }
+
     const systemPrompt = `Você é um gerador de escala de trabalho. Distribua as pessoas nos turnos respeitando todas as regras abaixo.
 
 Regras:
@@ -1046,7 +1051,7 @@ NÃO inclua texto, explicação ou markdown além do JSON.`;
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${state.config.openrouterKey}`,
+            'Authorization': `Bearer ${openrouterKey}`,
             'HTTP-Referer': window.location.origin,
             'X-Title': 'EscalAI'
         },
