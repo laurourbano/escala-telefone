@@ -158,10 +158,13 @@ function checkAuth() {
 
         // Admin visibility
         const adminTabs = document.querySelectorAll('[data-tab="pessoas"], [data-tab="horarios"], [data-tab="config"]');
+        const adminActions = document.querySelectorAll('#btn-generate, #btn-next-week');
         if (isAdmin()) {
             adminTabs.forEach(tab => tab.classList.remove('hidden-admin'));
+            adminActions.forEach(btn => btn.classList.remove('hidden-admin'));
         } else {
             adminTabs.forEach(tab => tab.classList.add('hidden-admin'));
+            adminActions.forEach(btn => btn.classList.add('hidden-admin'));
         }
 
         updateNotificationBadge();
@@ -983,6 +986,8 @@ function extractJSON(text) {
 }
 
 function generateNextWeek() {
+    if (!confirm('Avançar para a próxima semana e gerar uma nova escala? A escala atual será substituída.')) return;
+
     const advanceDate = (dateStr, days) => {
         const d = new Date(dateStr + 'T00:00:00');
         d.setDate(d.getDate() + days);
@@ -993,10 +998,12 @@ function generateNextWeek() {
     state.scheduleEndDate = advanceDate(state.scheduleEndDate, 7);
     document.getElementById('schedule-start-date').value = state.scheduleStartDate;
     document.getElementById('schedule-end-date').value = state.scheduleEndDate;
-    generateSchedule();
+    generateSchedule(true);
 }
 
-async function generateSchedule() {
+async function generateSchedule(skipConfirm) {
+    if (!skipConfirm && !confirm('Tem certeza que deseja gerar uma nova escala? A escala atual será substituída.')) return;
+
     if (state.people.length === 0 || state.shifts.length === 0) {
         alert("Adicione pessoas e horários primeiro!");
         return;
