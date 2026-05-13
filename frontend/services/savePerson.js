@@ -5,9 +5,9 @@ function savePerson(event) {
     const status = document.getElementById('person-status').value;
     var maxShiftsVal = parseInt(document.getElementById('person-max-shifts').value);
     var maxShifts = isNaN(maxShiftsVal) ? 4 : maxShiftsVal;
-    var finalStatus = maxShifts === 0 ? 'indisponivel' : status;
     const preferredCheckboxes = document.querySelectorAll('#person-preferred-shifts input:checked');
     const preferredShifts = Array.from(preferredCheckboxes).map(cb => cb.value);
+    var finalStatus = maxShifts === 0 || preferredShifts.length === 0 ? 'indisponivel' : status;
     const unavailabilityStart = document.getElementById('person-unavailability-start').value;
     const unavailabilityEnd = document.getElementById('person-unavailability-end').value;
 
@@ -44,7 +44,7 @@ function savePerson(event) {
         });
     }
 
-    if (maxShifts === 0) {
+    if (maxShifts === 0 || preferredShifts.length === 0) {
         document.getElementById('person-status').value = 'indisponivel';
         document.getElementById('unavailability-dates').style.display = 'block';
     }
