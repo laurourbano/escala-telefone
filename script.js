@@ -1056,7 +1056,6 @@ async function callOpenRouterAPI() {
     const model = state.config.openrouterModel || 'google/gemini-2.0-flash-exp';
 
     const openrouterKey = state.config.openrouterKey || (aiOpenrouterKeyInput ? aiOpenrouterKeyInput.value : '');
-    console.log('openrouterKey length:', openrouterKey ? openrouterKey.length : 0, 'preview:', openrouterKey ? openrouterKey.substring(0, 12) + '...' : 'VAZIO');
     if (!openrouterKey) {
         throw new Error('Chave da API OpenRouter não configurada. Vá em Config. IA e adicione sua chave.');
     }
