@@ -57,10 +57,14 @@ let state = {
     notifications: JSON.parse(localStorage.getItem('escala_notifications')) || []
 };
 
-// Ensure all people have a password (default 3820) and isAdmin field
+// Ensure all people have a password (default 3820), isAdmin field, and clean availability data
 state.people.forEach(person => {
     if (!person.password) person.password = '3820';
     if (person.isAdmin === undefined) person.isAdmin = false;
+    if (person.status === 'disponivel') {
+        person.unavailabilityStart = '';
+        person.unavailabilityEnd = '';
+    }
 });
 saveState();
 
