@@ -24,7 +24,7 @@ async function initTables() {
       CREATE TABLE IF NOT EXISTS configs (
         email TEXT PRIMARY KEY REFERENCES users(email),
         openrouter_key TEXT DEFAULT '',
-        openrouter_model TEXT DEFAULT 'google/gemini-2.0-flash-001',
+        openrouter_model TEXT DEFAULT 'google/gemini-2.0-flash-exp',
         gemini_key TEXT DEFAULT '',
         provider TEXT DEFAULT 'openrouter'
       )

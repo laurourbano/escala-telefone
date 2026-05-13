@@ -49,7 +49,7 @@ let state = {
     people: JSON.parse(localStorage.getItem('escala_people')) || [],
     shifts: JSON.parse(localStorage.getItem('escala_shifts')) || [],
     schedule: JSON.parse(localStorage.getItem('escala_schedule')) || {},
-    config: JSON.parse(localStorage.getItem('escala_config')) || { apiKey: '', openrouterKey: '', openrouterModel: 'google/gemini-2.0-flash-001', geminiKey: '', provider: 'openrouter', serverUrl: 'http://localhost:3001', serverToken: '' },
+    config: JSON.parse(localStorage.getItem('escala_config')) || { apiKey: '', openrouterKey: '', openrouterModel: 'google/gemini-2.0-flash-exp', geminiKey: '', provider: 'openrouter', serverUrl: 'http://localhost:3001', serverToken: '' },
     scheduleStartDate: localStorage.getItem('escala_start_date') || '',
     scheduleEndDate: localStorage.getItem('escala_end_date') || '',
     closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || [],
@@ -130,7 +130,7 @@ function init() {
     renderScheduleBoard();
     setupEventListeners();
     aiOpenrouterKeyInput.value = state.config.openrouterKey || '';
-    aiOpenrouterModelSelect.value = state.config.openrouterModel || 'google/gemini-2.0-flash-001';
+    aiOpenrouterModelSelect.value = state.config.openrouterModel || 'google/gemini-2.0-flash-exp';
     aiGeminiKeyInput.value = state.config.geminiKey || '';
     serverUrlInput.value = state.config.serverUrl || 'http://localhost:3001';
 
@@ -1021,7 +1021,7 @@ function buildSchedulePrompt() {
 
 async function callOpenRouterAPI() {
     const promptData = buildSchedulePrompt();
-    const model = state.config.openrouterModel || 'google/gemini-2.0-flash-001';
+    const model = state.config.openrouterModel || 'google/gemini-2.0-flash-exp';
 
     const openrouterKey = state.config.openrouterKey || (aiOpenrouterKeyInput ? aiOpenrouterKeyInput.value : '');
     console.log('openrouterKey length:', openrouterKey ? openrouterKey.length : 0, 'preview:', openrouterKey ? openrouterKey.substring(0, 12) + '...' : 'VAZIO');
@@ -1514,7 +1514,7 @@ async function saveConfigToServer() {
             },
             body: JSON.stringify({
                 openrouter_key: state.config.openrouterKey || '',
-                openrouter_model: state.config.openrouterModel || 'google/gemini-2.0-flash-001',
+                openrouter_model: state.config.openrouterModel || 'google/gemini-2.0-flash-exp',
                 gemini_key: state.config.geminiKey || '',
                 provider: state.config.provider || 'openrouter'
             })
