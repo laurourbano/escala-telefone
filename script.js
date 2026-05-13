@@ -640,12 +640,13 @@ function savePerson(event) {
     const preferredShifts = Array.from(document.querySelectorAll('input[name="pref-shifts"]:checked')).map(checkbox => checkbox.value);
 
     const existingPerson = id ? state.people.find(person => person.id === id) : null;
+    const status = document.getElementById('person-status').value;
     const personData = {
         id: id || generateId(),
         name: toTitleCase(document.getElementById('person-name').value.trim()),
-        status: document.getElementById('person-status').value,
-        unavailabilityStart: document.getElementById('person-unavailability-start').value,
-        unavailabilityEnd: document.getElementById('person-unavailability-end').value,
+        status: status,
+        unavailabilityStart: status === 'disponivel' ? '' : document.getElementById('person-unavailability-start').value,
+        unavailabilityEnd: status === 'disponivel' ? '' : document.getElementById('person-unavailability-end').value,
         maxShifts: Math.max(0, parseInt(document.getElementById('person-max-shifts').value) || 0),
         preferredShifts,
         password: existingPerson ? (existingPerson.password || '3820') : '3820',
