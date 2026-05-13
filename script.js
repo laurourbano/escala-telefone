@@ -311,7 +311,14 @@ function switchTab(tabId) {
     document.getElementById(`panel-${tabId}`).classList.remove('hidden');
 
     if (tabId === 'minha-escala') {
-        populatePersonSelect();
+        const selectGroup = document.getElementById('personal-select-group');
+        if (isAdmin()) {
+            selectGroup.style.display = 'block';
+            populatePersonSelect();
+        } else {
+            selectGroup.style.display = 'none';
+        }
+
         if (state.currentUser) {
             const select = document.getElementById('select-person-schedule');
             select.value = state.currentUser.id;
