@@ -1000,6 +1000,7 @@ async function generateSchedule() {
 
         saveState();
         renderScheduleBoard();
+        switchTab('escala');
 
         const selectedPersonId = document.getElementById('select-person-schedule').value;
         if (selectedPersonId) {
