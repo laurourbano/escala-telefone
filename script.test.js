@@ -1,6 +1,6 @@
 const { toTitleCase, generateEmail, calculateDefaultEndDate, getFirstName } = require('./script');
 
-describe('EscalAI Logic Tests', () => {
+describe('EscalaAI Logic Tests', () => {
     test('toTitleCase should format names correctly', () => {
         expect(toTitleCase('LAURO URBANO')).toBe('Lauro Urbano');
         expect(toTitleCase('lauro urbano')).toBe('Lauro Urbano');

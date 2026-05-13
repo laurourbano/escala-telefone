@@ -42,7 +42,7 @@ async function start() {
       await initTables();
       console.log('Conectado ao banco de dados com sucesso.');
       app.listen(PORT, () => {
-        console.log(`EscalAI backend rodando em http://localhost:${PORT}`);
+        console.log(`EscalaAI backend rodando em http://localhost:${PORT}`);
       });
       return;
     } catch (err) {

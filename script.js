@@ -1143,7 +1143,7 @@ NÃO inclua texto, explicação ou markdown além do JSON.`;
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${openrouterKey}`,
             'HTTP-Referer': window.location.origin,
-            'X-Title': 'EscalAI'
+            'X-Title': 'EscalaAI'
         },
         body: JSON.stringify({
             model: model,
@@ -1911,7 +1911,7 @@ function exportSchedulePDF() {
                     color:#666;
                     font-size:10px;
                 ">
-                    <div><strong>EscalAI</strong></div>
+                    <div><strong>EscalaAI</strong></div>
                     <div>${new Date().toLocaleDateString('pt-BR')}</div>
                 </div>
             </div>
