@@ -940,12 +940,25 @@ function validateSchedule() {
     }
 
     const statusElement = document.getElementById('validation-status');
+    let unfilledCount = 0;
+    state.shifts.forEach(shift => {
+        days.forEach(day => {
+            const dayKey = `${shift.id}-${day}`;
+            const scheduledIds = state.schedule[dayKey] || [];
+            unfilledCount += Math.max(0, shift.capacity - scheduledIds.length);
+        });
+    });
+
     if (hasError) {
         statusElement.innerHTML = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos (2 no mesmo dia / Excesso / Atestado)</span>';
     } else if (hasWarning) {
         statusElement.innerHTML = '<span class="status-badge warning"><i class="ph ph-warning"></i> Distribuição Desbalanceada</span>';
     } else {
         statusElement.innerHTML = '<span class="status-badge success"><i class="ph ph-check-circle"></i> Equilibrado</span>';
+    }
+
+    if (unfilledCount > 0) {
+        statusElement.innerHTML += `<span class="status-badge warning" style="margin-left:8px"><i class="ph ph-users"></i> Faltam ${unfilledCount} funcionário${unfilledCount !== 1 ? 's' : ''}</span>`;
     }
 }
 
