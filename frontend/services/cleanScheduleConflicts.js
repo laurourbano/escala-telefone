@@ -17,17 +17,18 @@ function cleanScheduleConflicts() {
         });
     });
 
-    state.shifts.forEach(shift => {
-        days.forEach(day => {
-            const key = `${shift.id}-${day}`;
-            const assigned = state.schedule[key] || [];
-            const seen = new Set();
-            state.schedule[key] = assigned.filter(personId => {
-                if (seen.has(personId)) {
+    var dayAssignments = {};
+    days.forEach(function (day) { dayAssignments[day] = new Set(); });
+    state.shifts.forEach(function (shift) {
+        days.forEach(function (day) {
+            var key = shift.id + '-' + day;
+            var assigned = state.schedule[key] || [];
+            state.schedule[key] = assigned.filter(function (personId) {
+                if (dayAssignments[day].has(personId)) {
                     removed++;
                     return false;
                 }
-                seen.add(personId);
+                dayAssignments[day].add(personId);
                 return true;
             });
         });
