@@ -1,42 +1,3 @@
-function renderClosedDates() {
-    closedDatesList.innerHTML = state.closedDates.map(function (date) {
-        return '\
-            <div class="badge" style="background: var(--bg-card-hover); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; padding: 0.25rem 0.5rem;">\
-                ' + formatDate(date) + '\
-                <button onclick="removeClosedDate(\'' + date + '\')" style="background: none; border: none; cursor: pointer; color: var(--danger); padding: 0; line-height: 1;"><i class="ph ph-x"></i></button>\
-            </div>\
-        ';
-    }).join('');
-}
-
-function removeClosedDate(date) {
-    state.closedDates = state.closedDates.filter(function (closedDate) { return closedDate !== date; });
-    saveState();
-    renderClosedDates();
-    renderScheduleBoard();
-}
-
-function switchTab(tabId) {
-    menuButtons.forEach(function (button) { return button.classList.remove('active'); });
-    document.querySelector('[data-tab="' + tabId + '"]').classList.add('active');
-    panels.forEach(function (panel) { return panel.classList.add('hidden'); });
-    document.getElementById('panel-' + tabId).classList.remove('hidden');
-    if (tabId === 'minha-escala') {
-        var selectGroup = document.getElementById('personal-select-group');
-        if (isAdmin()) {
-            selectGroup.style.display = 'block';
-            populatePersonSelect();
-        } else {
-            selectGroup.style.display = 'none';
-        }
-        if (state.currentUser) {
-            var select = document.getElementById('select-person-schedule');
-            select.value = state.currentUser.id;
-            renderPersonalSchedule(state.currentUser.id);
-        }
-    }
-}
-
 function setupEventListeners() {
     menuButtons.forEach(function (button) {
         button.addEventListener('click', function () {
@@ -205,34 +166,3 @@ function setupEventListeners() {
         }
     });
 }
-
-function init() {
-    sortShifts();
-    state.people.forEach(function (person) {
-        if (person.name) person.name = toTitleCase(person.name);
-        if (person.maxShifts === undefined || isNaN(person.maxShifts)) person.maxShifts = 5;
-        if (!person.preferredShifts || person.preferredShifts.length === 0) {
-            person.preferredShifts = state.shifts.map(function (shift) { return shift.id; });
-        }
-    });
-    renderPeople();
-    renderShifts();
-    scheduleStartDateInput.value = state.scheduleStartDate;
-    scheduleEndDateInput.value = state.scheduleEndDate;
-    renderClosedDates();
-    renderScheduleBoard();
-    setupEventListeners();
-    aiOpenrouterKeyInput.value = state.config.openrouterKey || '';
-    aiOpenrouterModelSelect.value = state.config.openrouterModel || 'google/gemini-2.0-flash-exp';
-    aiGeminiKeyInput.value = state.config.geminiKey || '';
-    serverUrlInput.value = state.config.serverUrl || 'http://localhost:3001';
-    var provider = state.config.provider || 'openrouter';
-    document.querySelector('input[name="ai-provider"][value="' + provider + '"]').checked = true;
-    toggleProviderConfig(provider);
-    validateSchedule();
-    populatePersonSelect();
-    checkAuth();
-    loadScheduleFromServer().catch(function () {});
-}
-
-document.addEventListener('DOMContentLoaded', init);

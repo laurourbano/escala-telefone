@@ -1,0 +1,66 @@
+.config-accordion {
+    width: calc(100% - 3rem);
+    max-width: 1400px;
+    margin: 1rem auto 0 auto;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+}
+
+.config-accordion summary {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+
+.config-accordion summary::-webkit-details-marker {
+    display: none;
+}
+
+.config-accordion summary:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.accordion-content {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.config-accordion[open] .accordion-content {
+    animation: accordionSlideDown 0.3s ease-out forwards;
+}
+
+@keyframes accordionSlideDown {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.config-section h4 {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.closed-dates-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.closed-dates-list {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}

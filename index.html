@@ -8,6 +8,12 @@
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%238b5cf6' d='M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-34.34-69.66a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,188.69l50.34-50.35A8,8,0,0,1,173.66,138.34Z'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
+    <!-- Component Styles -->
+    <link rel="stylesheet" href="frontend/components/schedule-board.component.css">
+    <link rel="stylesheet" href="frontend/components/login.component.css">
+    <link rel="stylesheet" href="frontend/components/minha-escala.component.css">
+    <link rel="stylesheet" href="frontend/components/config.component.css">
+    <link rel="stylesheet" href="frontend/components/notifications.component.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Phosphor Icons for beautiful icons -->
     <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
@@ -445,27 +451,83 @@
         </div>
     </div>
 
-    <!-- Shared -->
+    <!-- Shared: State & Core -->
     <script src="frontend/shared/state.js"></script>
-    <script src="frontend/shared/utils.js"></script>
+    <script src="frontend/shared/generateId.js"></script>
+    <script src="frontend/shared/saveState.js"></script>
+    <!-- Shared: Utilities (one per function) -->
+    <script src="frontend/shared/toTitleCase.js"></script>
+    <script src="frontend/shared/getFirstName.js"></script>
+    <script src="frontend/shared/generateEmail.js"></script>
+    <script src="frontend/shared/formatDate.js"></script>
+    <script src="frontend/shared/calculateDefaultEndDate.js"></script>
+    <script src="frontend/shared/isPersonUnavailable.js"></script>
+    <script src="frontend/shared/getWorkingDays.js"></script>
+    <script src="frontend/shared/extractJSON.js"></script>
+    <!-- Shared: DOM References -->
     <script src="frontend/shared/dom.js"></script>
-    <!-- Services -->
-    <script src="frontend/services/auth.service.js"></script>
-    <script src="frontend/services/server.service.js"></script>
-    <script src="frontend/services/config.service.js"></script>
-    <script src="frontend/services/notification.service.js"></script>
-    <script src="frontend/services/people.service.js"></script>
-    <script src="frontend/services/shifts.service.js"></script>
-    <script src="frontend/services/schedule.service.js"></script>
+    <!-- Services: Auth -->
+    <script src="frontend/services/isAdmin.js"></script>
+    <script src="frontend/services/handleLogin.js"></script>
+    <script src="frontend/services/handleLogout.js"></script>
+    <script src="frontend/services/openChangePasswordModal.js"></script>
+    <script src="frontend/services/handleChangePassword.js"></script>
+    <!-- Services: Config -->
+    <script src="frontend/services/syncConfigFromInputs.js"></script>
+    <script src="frontend/services/toggleProviderConfig.js"></script>
+    <script src="frontend/services/saveConfigToServer.js"></script>
+    <script src="frontend/services/loadConfigFromServer.js"></script>
+    <!-- Services: People -->
+    <script src="frontend/services/sortPeople.js"></script>
+    <script src="frontend/services/openPersonModal.js"></script>
+    <script src="frontend/services/savePerson.js"></script>
+    <script src="frontend/services/editPerson.js"></script>
+    <script src="frontend/services/deletePerson.js"></script>
+    <script src="frontend/services/toggleAdmin.js"></script>
+    <script src="frontend/services/populatePersonSelect.js"></script>
+    <!-- Services: Shifts -->
+    <script src="frontend/services/sortShifts.js"></script>
+    <script src="frontend/services/openShiftModal.js"></script>
+    <script src="frontend/services/saveShift.js"></script>
+    <script src="frontend/services/editShift.js"></script>
+    <script src="frontend/services/deleteShift.js"></script>
+    <!-- Services: Notifications -->
+    <script src="frontend/services/updateNotificationBadge.js"></script>
+    <script src="frontend/services/renderNotifications.js"></script>
+    <script src="frontend/services/openSwapModal.js"></script>
+    <script src="frontend/services/updateSwapTargetShifts.js"></script>
+    <script src="frontend/services/handleSwapRequest.js"></script>
+    <script src="frontend/services/acceptSwap.js"></script>
+    <script src="frontend/services/rejectSwap.js"></script>
+    <!-- Services: Server -->
+    <script src="frontend/services/syncLoginWithServer.js"></script>
+    <script src="frontend/services/ensureServerAuth.js"></script>
+    <script src="frontend/services/saveScheduleToServer.js"></script>
+    <script src="frontend/services/loadScheduleFromServer.js"></script>
+    <!-- Services: Schedule -->
+    <script src="frontend/services/buildSchedulePrompt.js"></script>
+    <script src="frontend/services/callOpenRouterAPI.js"></script>
+    <script src="frontend/services/callGeminiAPI.js"></script>
+    <script src="frontend/services/runLocalGenerationAlgorithm.js"></script>
+    <script src="frontend/services/cleanScheduleConflicts.js"></script>
+    <script src="frontend/services/generateNextWeek.js"></script>
+    <script src="frontend/services/generateSchedule.js"></script>
     <!-- Components -->
     <script src="frontend/components/login.component.js"></script>
-    <script src="frontend/components/schedule-board.component.js"></script>
+    <script src="frontend/components/renderScheduleBoard.js"></script>
+    <script src="frontend/components/updateScheduleFromDOM.js"></script>
+    <script src="frontend/components/validateSchedule.js"></script>
+    <script src="frontend/components/highlightPerson.js"></script>
     <script src="frontend/components/people-list.component.js"></script>
     <script src="frontend/components/shifts-list.component.js"></script>
     <script src="frontend/components/minha-escala.component.js"></script>
     <script src="frontend/components/export-pdf.component.js"></script>
-    <!-- App Entry Point -->
-    <script src="frontend/app.js"></script>
+    <!-- App Functions (one per file) -->
+    <script src="frontend/renderClosedDates.js"></script>
+    <script src="frontend/removeClosedDate.js"></script>
+    <script src="frontend/switchTab.js"></script>
+    <script src="frontend/setupEventListeners.js"></script>
+    <script src="frontend/init.js"></script>
 </body>
 
 </html>
