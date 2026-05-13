@@ -15,9 +15,11 @@ function renderPeople() {
     var totalShifts = state.shifts.length;
     var days = getWorkingDays();
     state.people.forEach(function (person) {
-        var partialShifts = person.preferredShifts && person.preferredShifts.length < totalShifts;
+        var partialShifts = person.maxShifts > 0 && person.preferredShifts && person.preferredShifts.length < totalShifts;
         if (peopleFilter === 'available' && person.status !== 'disponivel') return;
         if (peopleFilter === 'available-partial' && person.status !== 'disponivel' && !partialShifts) return;
+        if (peopleFilter === 'indisponivel' && person.status !== 'indisponivel') return;
+        if (peopleFilter === 'afastados' && person.status !== 'folga' && person.status !== 'ferias' && person.status !== 'atestado') return;
         var card = document.createElement('div');
         card.className = 'card';
         var isOwner = generateEmail(person.name) === 'lauro.urbano@crf-pr.org.br';
