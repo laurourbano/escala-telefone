@@ -6,7 +6,6 @@ const { initTables, closeDb } = require('./database');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// CORS - em produção, restrinja à URL do seu frontend
 const allowedOrigins = [
   'http://localhost:5500',
   'http://localhost:3000',
@@ -30,27 +29,35 @@ app.use(express.json());
 
 app.use('/api', configRoutes);
 
-// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Inicializa o banco e sobe o servidor
 async function start() {
-  try {
-    await initTables();
-    app.listen(PORT, () => {
-      console.log(`EscalAI backend rodando em http://localhost:${PORT}`);
-    });
-  } catch (err) {
-    console.error('Erro ao iniciar servidor:', err);
-    process.exit(1);
+  const maxRetries = 5;
+  let lastError;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await initTables();
+      console.log('Conectado ao banco de dados com sucesso.');
+      app.listen(PORT, () => {
+        console.log(`EscalAI backend rodando em http://localhost:${PORT}`);
+      });
+      return;
+    } catch (err) {
+      lastError = err;
+      console.log(`Tentativa ${i + 1}/${maxRetries} de conectar ao banco falhou. Aguardando 3s...`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
   }
+
+  console.error('Erro ao conectar ao banco após várias tentativas:', lastError);
+  process.exit(1);
 }
 
 start();
 
-// Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('Encerrando servidor...');
   await closeDb();

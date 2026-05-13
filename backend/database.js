@@ -1,10 +1,12 @@
 const { Pool } = require('pg');
 
+const DATABASE_URL = process.env.DATABASE_URL;
+
+console.log('DATABASE_URL definida:', !!DATABASE_URL);
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/escalai',
-  ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('render')
-    ? { rejectUnauthorized: false }
-    : false
+  connectionString: DATABASE_URL || 'postgresql://localhost:5432/escalai',
+  ssl: DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
 async function initTables() {
