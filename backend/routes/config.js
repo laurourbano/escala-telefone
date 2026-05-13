@@ -67,7 +67,34 @@ router.get('/config', authMiddleware, async (req, res) => {
       return res.json({
         openrouter_key: '',
         openrouter_model: 'google/gemini-2.0-flash-exp',
+        gemini_key: '',
+        provider: 'openrouter'
+      });
+    }
 
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Get config error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// PUT /api/config — atualizar config do usuário logado
+router.put('/config', authMiddleware, async (req, res) => {
+  try {
+    const { openrouter_key, openrouter_model, gemini_key, provider } = req.body;
+
+    await query(`
+      INSERT INTO configs (email, openrouter_key, openrouter_model, gemini_key, provider)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (email) DO UPDATE SET
+        openrouter_key = EXCLUDED.openrouter_key,
+        openrouter_model = EXCLUDED.openrouter_model,
+        gemini_key = EXCLUDED.gemini_key,
+        provider = EXCLUDED.provider
+    `, [
+      req.userEmail,
+      openrouter_key || '',
       openrouter_model || 'google/gemini-2.0-flash-exp',
       gemini_key || '',
       provider || 'openrouter'
