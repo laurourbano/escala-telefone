@@ -5,7 +5,7 @@
   "main": "script.js",
   "scripts": {
     "test": "jest",
-    "backend": "node backend/server.js"
+    "start": "node backend/server.js"
   },
   "jest": {
     "testEnvironment": "jsdom"
@@ -22,6 +22,13 @@
     "url": "https://github.com/laurourbano/escala-telefone/issues"
   },
   "homepage": "https://github.com/laurourbano/escala-telefone#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.0"
+  },
   "devDependencies": {
     "husky": "^9.1.7",
     "jest": "^30.4.1",
