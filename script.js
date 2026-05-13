@@ -54,7 +54,9 @@ let state = {
     scheduleEndDate: localStorage.getItem('escala_end_date') || '',
     closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || [],
     currentUser: JSON.parse(localStorage.getItem('escala_current_user')) || null,
-    notifications: JSON.parse(localStorage.getItem('escala_notifications')) || []
+    notifications: JSON.parse(localStorage.getItem('escala_notifications')) || [],
+    lastSchedule: JSON.parse(localStorage.getItem('escala_last_schedule')) || {},
+    shiftCounts: JSON.parse(localStorage.getItem('escala_shift_counts')) || {}
 };
 
 // Ensure all people have a password (default 3820), isAdmin field, and clean availability data
@@ -213,6 +215,8 @@ function saveState() {
     localStorage.setItem('escala_end_date', state.scheduleEndDate);
     localStorage.setItem('escala_closed_dates', JSON.stringify(state.closedDates));
     localStorage.setItem('escala_current_user', JSON.stringify(state.currentUser));
+    localStorage.setItem('escala_last_schedule', JSON.stringify(state.lastSchedule));
+    localStorage.setItem('escala_shift_counts', JSON.stringify(state.shiftCounts));
 }
 
 // Date Helpers
@@ -986,6 +990,9 @@ async function generateSchedule() {
     document.getElementById('ai-loading').classList.remove('hidden');
     syncConfigFromInputs();
 
+    // Snapshot current schedule as last week before generating new one
+    state.lastSchedule = JSON.parse(JSON.stringify(state.schedule));
+
     try {
         const provider = state.config.provider || 'openrouter';
         let usedApi = false;
@@ -1002,6 +1009,18 @@ async function generateSchedule() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             runLocalGenerationAlgorithm();
         }
+
+        // Update cumulative shift counts for fairness tracking
+        const days = getWorkingDays();
+        state.shifts.forEach(shift => {
+            days.forEach(day => {
+                const key = `${shift.id}-${day}`;
+                const assigned = state.schedule[key] || [];
+                assigned.forEach(personId => {
+                    state.shiftCounts[personId] = (state.shiftCounts[personId] || 0) + 1;
+                });
+            });
+        });
 
         saveState();
         renderScheduleBoard();
@@ -1038,11 +1057,22 @@ function buildSchedulePrompt() {
         capacity: s.capacity
     }));
 
+    // Calculate how many shifts each person had last week
+    const lastWeekPersonShifts = {};
+    Object.entries(state.lastSchedule).forEach(([key, personIds]) => {
+        personIds.forEach(personId => {
+            lastWeekPersonShifts[personId] = (lastWeekPersonShifts[personId] || 0) + 1;
+        });
+    });
+
     return {
         days,
         people: peopleData,
         shifts: shiftsData,
         closedDates: state.closedDates,
+        lastWeekAssignments: state.lastSchedule,
+        lastWeekPersonShifts,
+        shiftCounts: state.shiftCounts,
         rules: {
             noWeekends: true,
             respectCapacity: true,
@@ -1075,6 +1105,8 @@ Regras:
 6. Distribuir a carga de forma equilibrada entre as pessoas
 7. Uma pessoa NÃO pode estar em dois turnos diferentes no mesmo dia
 8. A pessoa pode ficar vaga se não houver candidatos disponíveis
+9. A escala desta semana DEVE ser DIFERENTE da semana anterior (lastWeekAssignments). Não repita a mesma pessoa no mesmo turno no mesmo dia da semana
+10. Use shiftCounts (total de turnos acumulados por pessoa historicamente) para priorizar quem tem menos turnos, garantindo distribuição justa ao longo do tempo
 
 Responda APENAS com JSON válido no formato:
 {"assignments":[{"shiftId":"id_do_turno","day":"YYYY-MM-DD","peopleIds":["id_da_pessoa1","id_da_pessoa2"]}]}
@@ -1160,6 +1192,8 @@ Regras:
 6. Distribuir a carga de forma equilibrada entre as pessoas
 7. Uma pessoa NÃO pode estar em dois turnos diferentes no mesmo dia
 8. A pessoa pode ficar vaga se não houver candidatos disponíveis
+9. A escala desta semana DEVE ser DIFERENTE da semana anterior (lastWeekAssignments). Não repita a mesma pessoa no mesmo turno no mesmo dia da semana
+10. Use shiftCounts (total de turnos acumulados por pessoa historicamente) para priorizar quem tem menos turnos, garantindo distribuição justa ao longo do tempo
 
 Dados:
 ${JSON.stringify(promptData, null, 2)}
