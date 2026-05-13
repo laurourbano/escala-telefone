@@ -248,8 +248,9 @@
                     <div class="form-group">
                         <label>Status</label>
                         <select id="person-status"
-                            onchange="document.getElementById('unavailability-dates').style.display = this.value === 'disponivel' ? 'none' : 'block'">
+                            onchange="handleStatusChange(this.value)">
                             <option value="disponivel">Disponível</option>
+                            <option value="indisponivel">Indisponível</option>
                             <option value="folga">Folga</option>
                             <option value="ferias">Férias</option>
                             <option value="atestado">Atestado</option>
@@ -484,6 +485,7 @@
     <script src="frontend/services/loadConfigFromServer.js"></script>
     <!-- Services: People -->
     <script src="frontend/services/sortPeople.js"></script>
+    <script src="frontend/services/handleStatusChange.js"></script>
     <script src="frontend/services/openPersonModal.js"></script>
     <script src="frontend/services/savePerson.js"></script>
     <script src="frontend/services/editPerson.js"></script>
