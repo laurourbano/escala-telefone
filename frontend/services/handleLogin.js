@@ -22,7 +22,7 @@ function handleLogin(event) {
                 id: generateId(),
                 name: toTitleCase(rawName),
                 status: 'disponivel',
-                maxShifts: 5,
+                maxShifts: 4,
                 preferredShifts: state.shifts.map(shift => shift.id),
                 password: '3820'
             };

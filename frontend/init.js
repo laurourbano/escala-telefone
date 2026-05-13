@@ -2,7 +2,7 @@ function init() {
     sortShifts();
     state.people.forEach(function (person) {
         if (person.name) person.name = toTitleCase(person.name);
-        if (person.maxShifts === undefined || isNaN(person.maxShifts)) person.maxShifts = 5;
+        if (person.maxShifts === undefined || isNaN(person.maxShifts)) person.maxShifts = 4;
         if (!person.preferredShifts || person.preferredShifts.length === 0) {
             person.preferredShifts = state.shifts.map(function (shift) { return shift.id; });
         }

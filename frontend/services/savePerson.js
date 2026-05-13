@@ -3,7 +3,7 @@ function savePerson(event) {
     const id = document.getElementById('person-id').value;
     const name = toTitleCase(document.getElementById('person-name').value.trim());
     const status = document.getElementById('person-status').value;
-    const maxShifts = parseInt(document.getElementById('person-max-shifts').value) || 5;
+    const maxShifts = parseInt(document.getElementById('person-max-shifts').value) || 4;
     const preferredCheckboxes = document.querySelectorAll('#person-preferred-shifts input:checked');
     const preferredShifts = Array.from(preferredCheckboxes).map(cb => cb.value);
     const unavailabilityStart = document.getElementById('person-unavailability-start').value;

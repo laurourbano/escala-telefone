@@ -49,7 +49,7 @@ function renderPeople() {
                 <span>\
                     ' + (person.maxShifts === 0
                 ? 'Sem escalas'
-                : 'Max: ' + person.maxShifts + ' turnos') + '\
+                : person.maxShifts + ' horários por semana') + '\
                 </span>\
             </div>\
         ';
