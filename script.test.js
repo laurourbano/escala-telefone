@@ -1,4 +1,4 @@
-const { toTitleCase, generateEmail, calculateDefaultEndDate, getFirstName } = require('./script');
+const { toTitleCase, generateEmail, calculateDefaultEndDate, getFirstName } = require('./frontend/shared/utils');
 
 describe('EscalaAI Logic Tests', () => {
     test('toTitleCase should format names correctly', () => {
@@ -17,7 +17,6 @@ describe('EscalaAI Logic Tests', () => {
     });
 
     test('calculateDefaultEndDate should return 5 business days range', () => {
-        // Monday -> Friday
         expect(calculateDefaultEndDate('2026-05-11')).toBe('2026-05-15');
     });
 });
