@@ -34,7 +34,7 @@ app.get('/api/health', (req, res) => {
 });
 
 async function start() {
-  const maxRetries = 5;
+  const maxRetries = 2;
   let lastError;
 
   for (let i = 0; i < maxRetries; i++) {
