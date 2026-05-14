@@ -1,12 +1,19 @@
 async function saveScheduleToServer() {
-    // Se não houver token ou URL, marcamos como precisando de sincronia e paramos
+    // Tenta autenticar se não houver token mas houver um usuário logado localmente
+    if (!state.config.serverToken && state.currentUser) {
+        await ensureServerAuth();
+    }
+
+    // Se ainda não houver token ou URL, marcamos como precisando de sincronia e paramos
     if (!state.config.serverToken || !state.config.serverUrl) {
         state.needsSync = true;
         localStorage.setItem('escala_needs_sync', 'true');
+        updateSyncStatus('offline');
         return;
     }
 
     try {
+        updateSyncStatus('syncing');
         const serverUrl = state.config.serverUrl;
         const response = await fetch(`${serverUrl}/api/schedule`, {
             method: 'PUT',
@@ -27,6 +34,7 @@ async function saveScheduleToServer() {
             // Sincronizado com sucesso!
             state.needsSync = false;
             localStorage.setItem('escala_needs_sync', 'false');
+            updateSyncStatus('online');
             console.log('Dados sincronizados com o servidor com sucesso.');
         } else {
             throw new Error('Erro na resposta do servidor');
@@ -35,6 +43,7 @@ async function saveScheduleToServer() {
         // Se falhar, garantimos que o flag de sincronia continue true
         state.needsSync = true;
         localStorage.setItem('escala_needs_sync', 'true');
+        updateSyncStatus('offline');
         console.log('Servidor indisponível. Alterações salvas localmente e aguardando conexão.');
     }
 }

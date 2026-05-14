@@ -2,6 +2,7 @@ async function loadScheduleFromServer() {
     if (!state.config.serverToken || !state.config.serverUrl) return;
 
     try {
+        updateSyncStatus('syncing');
         const serverUrl = state.config.serverUrl;
         console.log('Buscando dados do servidor...');
         const response = await fetch(`${serverUrl}/api/schedule`, {
@@ -10,9 +11,9 @@ async function loadScheduleFromServer() {
 
         if (response.ok) {
             const data = await response.json();
+            updateSyncStatus('online');
             
-            // Se o servidor estiver vazio mas o local tiver dados e estiver "dirty",
-            // talvez devêssemos enviar o local. Mas por enquanto, vamos apenas carregar se houver algo.
+            // ... (rest of the logic)
             
             let updated = false;
 
@@ -36,6 +37,7 @@ async function loadScheduleFromServer() {
                 // Ao carregar do servidor, assumimos que estamos sincronizados
                 state.needsSync = false;
                 localStorage.setItem('escala_needs_sync', 'false');
+                updateSyncStatus('online');
                 
                 // Salva no localStorage como backup
                 saveState(); 
@@ -53,6 +55,7 @@ async function loadScheduleFromServer() {
             }
         }
     } catch (err) {
+        updateSyncStatus('offline');
         console.log('Servidor indisponível no momento. Usando backup local.');
     }
 }

@@ -28,6 +28,9 @@
         <div class="logo">
             <i class="ph-fill ph-calendar-check"></i>
             <span>EscalaAI</span>
+            <div id="sync-status" class="sync-status offline" title="Desconectado do servidor" style="margin-left: 0.5rem; font-size: 1.2rem; display: flex; align-items: center;">
+                <i class="ph-fill ph-cloud-slash" style="color: var(--danger); opacity: 0.6;"></i>
+            </div>
         </div>
         <div class="topbar-actions" id="topbar-user-actions" style="margin-left: auto; display: none;">
             <button id="btn-notifications" class="icon-btn" style="position: relative; margin-right: 1rem;">
@@ -537,6 +540,7 @@
     <script src="frontend/switchTab.js"></script>
     <script src="frontend/setupEventListeners.js"></script>
     <script src="frontend/init.js"></script>
+    <script src="frontend/services/updateSyncStatus.js"></script>
 </body>
 
 </html>
