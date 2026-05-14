@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'escalai_secret_dev_change_in_production';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key_not_for_production';
+
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev_secret_key_not_for_production')) {
+  throw new Error('A variável de ambiente JWT_SECRET deve ser configurada em produção para garantir a segurança.');
+}
+
 
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
