@@ -10,8 +10,8 @@ function saveState() {
     localStorage.setItem('escala_last_schedule', JSON.stringify(state.lastSchedule));
     localStorage.setItem('escala_shift_counts', JSON.stringify(state.shiftCounts));
 
-// Sincroniza com o servidor apenas se houver pendências de sincronização
-if (state.needsSync && typeof saveScheduleToServer === 'function') {
+// Sincroniza com o servidor se o serviço estiver disponível
+if (typeof saveScheduleToServer === 'function') {
     saveScheduleToServer().catch(() => {});
 }
 }
