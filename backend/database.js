@@ -43,9 +43,20 @@ async function initTables() {
       )
     `);
 
-    // Ensure the single row exists
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS baixa_data (
+        id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+        data JSONB DEFAULT '{}',
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Ensure the single row exists for both tables
     await client.query(`
       INSERT INTO schedules (id) VALUES (1) ON CONFLICT (id) DO NOTHING
+    `);
+    await client.query(`
+      INSERT INTO baixa_data (id) VALUES (1) ON CONFLICT (id) DO NOTHING
     `);
 
     console.log('Tabelas verificadas/criadas com sucesso.');

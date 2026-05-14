@@ -152,4 +152,27 @@ router.put('/schedule', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/baixa — obter dados do Baixa RT
+router.get('/baixa', async (req, res) => {
+  try {
+    const result = await query('SELECT data FROM baixa_data WHERE id = 1');
+    res.json(result.rows[0]?.data || {});
+  } catch (err) {
+    console.error('Get baixa error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// POST /api/baixa — salvar dados do Baixa RT
+router.post('/baixa', async (req, res) => {
+  try {
+    const data = req.body;
+    await query('UPDATE baixa_data SET data = $1, updated_at = NOW() WHERE id = 1', [JSON.stringify(data)]);
+    res.json({ message: 'Dados salvos com sucesso' });
+  } catch (err) {
+    console.error('Save baixa error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;
