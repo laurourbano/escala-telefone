@@ -134,6 +134,7 @@
                         <div class="form-group">
                             <label for="ai-openrouter-model">Modelo</label>
                             <select id="ai-openrouter-model">
+                                <option value="meta-llama/llama-4-maverick-17b-128e-instruct" selected>Llama 4 Maverick</option>
                                 <option value="google/gemini-2.0-flash-lite-preview-02-05">Gemini 2.0 Flash Lite</option>
                                 <option value="google/gemini-2.0-flash-exp">Gemini 2.0 Flash</option>
                                 <option value="google/gemini-2.5-flash-preview-04-17">Gemini 2.5 Flash</option>
@@ -141,7 +142,6 @@
                                 <option value="openai/gpt-4o-mini">OpenAI GPT-4o Mini</option>
                                 <option value="anthropic/claude-sonnet-4-20250514">Claude Sonnet 4</option>
                                 <option value="anthropic/claude-haiku-4-20250514">Claude Haiku 4</option>
-                                <option value="meta-llama/llama-4-maverick-17b-128e-instruct">Llama 4 Maverick</option>
                                 <option value="meta-llama/llama-4-scout-17b-16e-instruct">Llama 4 Scout</option>
                             </select>
                         </div>
@@ -158,7 +158,7 @@
                         <label>Servidor Online</label>
                         <small style="display: block; margin-bottom: 0.5rem; color: var(--text-muted);">Salve suas chaves no servidor para acessar de qualquer lugar.</small>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="text" id="server-url" value="http://localhost:3001" placeholder="URL do servidor" style="flex: 1;">
+                            <input type="text" id="server-url" value="https://escalai-backend.onrender.com" placeholder="URL do servidor" style="flex: 1;">
                             <button id="btn-save-server-config" class="secondary-btn">Salvar no Servidor</button>
                             <button id="btn-load-server-config" class="secondary-btn">Carregar</button>
                         </div>

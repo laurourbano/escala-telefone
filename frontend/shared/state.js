@@ -2,7 +2,15 @@ let state = {
     people: JSON.parse(localStorage.getItem('escala_people')) || [],
     shifts: JSON.parse(localStorage.getItem('escala_shifts')) || [],
     schedule: JSON.parse(localStorage.getItem('escala_schedule')) || {},
-    config: JSON.parse(localStorage.getItem('escala_config')) || { apiKey: '', openrouterKey: '', openrouterModel: 'google/gemini-2.0-flash-exp', geminiKey: '', provider: 'openrouter', serverUrl: 'http://localhost:3001', serverToken: '' },
+    config: JSON.parse(localStorage.getItem('escala_config')) || { 
+        apiKey: '', 
+        openrouterKey: '', 
+        openrouterModel: 'meta-llama/llama-4-maverick-17b-128e-instruct', 
+        geminiKey: '', 
+        provider: 'openrouter', 
+        serverUrl: 'https://escalai-backend.onrender.com', 
+        serverToken: '' 
+    },
     scheduleStartDate: localStorage.getItem('escala_start_date') || '',
     scheduleEndDate: localStorage.getItem('escala_end_date') || '',
     closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || [],
