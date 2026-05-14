@@ -26,7 +26,7 @@ function saveShift(event) {
 
     sortShifts();
     saveState();
-    saveScheduleToServer();
+
     renderShifts();
     renderScheduleBoard();
     document.getElementById('modal-shift').classList.remove('active');

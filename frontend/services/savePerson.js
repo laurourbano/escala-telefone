@@ -50,7 +50,7 @@ function savePerson(event) {
     }
     sortPeople();
     saveState();
-    saveScheduleToServer();
+
     renderPeople();
     document.getElementById('modal-person').classList.remove('active');
 }

@@ -51,7 +51,7 @@ async function generateSchedule(skipConfirm) {
         });
 
         saveState();
-        saveScheduleToServer();
+
         renderScheduleBoard();
         switchTab('escala');
 
