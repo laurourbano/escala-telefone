@@ -9,7 +9,8 @@ let state = {
     currentUser: JSON.parse(localStorage.getItem('escala_current_user')) || null,
     notifications: JSON.parse(localStorage.getItem('escala_notifications')) || [],
     lastSchedule: JSON.parse(localStorage.getItem('escala_last_schedule')) || {},
-    shiftCounts: JSON.parse(localStorage.getItem('escala_shift_counts')) || {}
+    shiftCounts: JSON.parse(localStorage.getItem('escala_shift_counts')) || {},
+    needsSync: localStorage.getItem('escala_needs_sync') === 'true' || false
 };
 
 state.people.forEach(person => {

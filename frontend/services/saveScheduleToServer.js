@@ -1,12 +1,14 @@
 async function saveScheduleToServer() {
-    if (!state.config.serverToken) {
-        const authed = await ensureServerAuth();
-        if (!authed) return;
+    // Se não houver token ou URL, marcamos como precisando de sincronia e paramos
+    if (!state.config.serverToken || !state.config.serverUrl) {
+        state.needsSync = true;
+        localStorage.setItem('escala_needs_sync', 'true');
+        return;
     }
 
     try {
-        const serverUrl = state.config.serverUrl || 'http://localhost:3001';
-        await fetch(`${serverUrl}/api/schedule`, {
+        const serverUrl = state.config.serverUrl;
+        const response = await fetch(`${serverUrl}/api/schedule`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -20,7 +22,19 @@ async function saveScheduleToServer() {
                 shifts: state.shifts
             })
         });
+
+        if (response.ok) {
+            // Sincronizado com sucesso!
+            state.needsSync = false;
+            localStorage.setItem('escala_needs_sync', 'false');
+            console.log('Dados sincronizados com o servidor com sucesso.');
+        } else {
+            throw new Error('Erro na resposta do servidor');
+        }
     } catch (err) {
-        console.log('Servidor não disponível para salvar escala.');
+        // Se falhar, garantimos que o flag de sincronia continue true
+        state.needsSync = true;
+        localStorage.setItem('escala_needs_sync', 'true');
+        console.log('Servidor indisponível. Alterações salvas localmente e aguardando conexão.');
     }
 }

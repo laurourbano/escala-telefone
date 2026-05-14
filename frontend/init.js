@@ -26,6 +26,19 @@ function init() {
     checkAuth();
     saveState();
     loadScheduleFromServer().catch(function () {});
+
+    // Poller de sincronização: tenta sincronizar a cada 30 segundos se houver pendências
+    setInterval(function() {
+        if (state.needsSync && typeof saveScheduleToServer === 'function') {
+            console.log('Tentando sincronização pendente...');
+            saveScheduleToServer().catch(function() {});
+        }
+    }, 30000);
+
+    // Tenta sincronizar assim que a conexão voltar
+    window.addEventListener('online', function() {
+        if (state.needsSync) saveScheduleToServer().catch(function() {});
+    });
 }
 
 document.addEventListener('DOMContentLoaded', init);

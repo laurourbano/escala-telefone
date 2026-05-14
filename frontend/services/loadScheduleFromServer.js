@@ -1,33 +1,58 @@
 async function loadScheduleFromServer() {
-    if (!state.config.serverToken) return;
+    if (!state.config.serverToken || !state.config.serverUrl) return;
 
     try {
-        const serverUrl = state.config.serverUrl || 'http://localhost:3001';
+        const serverUrl = state.config.serverUrl;
+        console.log('Buscando dados do servidor...');
         const response = await fetch(`${serverUrl}/api/schedule`, {
             headers: { 'Authorization': `Bearer ${state.config.serverToken}` }
         });
 
         if (response.ok) {
             const data = await response.json();
+            
+            // Se o servidor estiver vazio mas o local tiver dados e estiver "dirty",
+            // talvez devêssemos enviar o local. Mas por enquanto, vamos apenas carregar se houver algo.
+            
+            let updated = false;
+
             if (data.schedule && Object.keys(data.schedule).length > 0) {
                 state.schedule = data.schedule;
                 if (data.start_date) state.scheduleStartDate = data.start_date;
                 if (data.end_date) state.scheduleEndDate = data.end_date;
-                saveState();
-                renderScheduleBoard();
+                updated = true;
             }
             if (data.people && data.people.length > 0) {
                 state.people = data.people;
-                saveState();
-                renderPeople();
+                updated = true;
             }
             if (data.shifts && data.shifts.length > 0) {
                 state.shifts = data.shifts;
-                saveState();
+                updated = true;
+            }
+
+            if (updated) {
+                console.log('Dados carregados do servidor com sucesso.');
+                // Ao carregar do servidor, assumimos que estamos sincronizados
+                state.needsSync = false;
+                localStorage.setItem('escala_needs_sync', 'false');
+                
+                // Salva no localStorage como backup
+                saveState(); 
+                
+                // Atualiza a UI
+                renderPeople();
                 renderShifts();
+                renderScheduleBoard();
+                validateSchedule();
+                populatePersonSelect();
+            } else if (state.needsSync) {
+                // Se o servidor está vazio mas temos dados locais pendentes, enviamos agora
+                console.log('Servidor vazio, enviando dados locais pendentes...');
+                saveScheduleToServer();
             }
         }
     } catch (err) {
-        console.log('Servidor não disponível para carregar escala.');
+        console.log('Servidor indisponível no momento. Usando backup local.');
     }
 }
