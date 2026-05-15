@@ -35,7 +35,7 @@ function buildSchedulePrompt() {
         rules: {
             noWeekends: true,
             respectCapacity: true,
-            respectMaxShifts: true,
+            respectMaxShifts: 'preferencial; pode exceder para preencher vagas, sinalizando excesso e compensando nas proximas semanas',
             respectUnavailability: true,
             preferPreferredShifts: true,
             balanceDistribution: true,

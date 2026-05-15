@@ -4,13 +4,21 @@ function renderNotifications() {
     const myNotifications = state.notifications
         .filter(n => n.toId === state.currentUser.id)
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const hasPending = myNotifications.some(n => n.status === 'pending');
+
+    document.getElementById('modal-notifications').classList.toggle('swap-action-required', hasPending);
 
     if (myNotifications.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>Nao ha novas notificacoes.</p></div>';
         return;
     }
 
-    container.innerHTML = myNotifications.map(n => {
+    container.innerHTML = `${hasPending ? `
+        <div class="swap-alert-banner">
+            <strong>Troca de escala pendente</strong>
+            <span>Revise a solicitação abaixo e escolha Aceitar ou Recusar.</span>
+        </div>
+    ` : ''}${myNotifications.map(n => {
         const myShift = state.shifts.find(s => s.id === n.targetShiftId);
         const theirShift = state.shifts.find(s => s.id === n.myShiftId);
 
@@ -27,5 +35,5 @@ function renderNotifications() {
                 ` : `<span class="badge" style="background: rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.7rem;">${n.status === 'accepted' ? 'Aceito' : 'Recusado'}</span>`}
             </div>
         `;
-    }).join('');
+    }).join('')}`;
 }

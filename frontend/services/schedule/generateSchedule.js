@@ -69,7 +69,7 @@ async function generateSchedule(skipConfirm = false) {
 
         if (removed > 0 || totalUnfilled > 0) {
             let msg = '';
-            if (removed > 0) msg += `${removed} conflito${removed !== 1 ? 's' : ''} removido${removed !== 1 ? 's' : ''} (indisponíveis/mesmo dia/excesso).\n`;
+            if (removed > 0) msg += `${removed} conflito${removed !== 1 ? 's' : ''} removido${removed !== 1 ? 's' : ''} (indisponíveis/mesmo dia).\n`;
             if (totalUnfilled > 0) msg += `Faltam ~${Math.ceil(totalUnfilled / 5)} funcionário${Math.ceil(totalUnfilled / 5) !== 1 ? 's' : ''} para preencher ${totalUnfilled} vaga${totalUnfilled !== 1 ? 's' : ''}.`;
             showToast(msg, "warning");
         }

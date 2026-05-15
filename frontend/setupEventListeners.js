@@ -50,11 +50,19 @@ function setupEventListeners() {
     document.addEventListener('click', function (event) {
         if (event.target.closest('.close-modal')) {
             const modal = event.target.closest('.modal-overlay');
+            if (modal && modal.classList.contains('swap-action-required')) {
+                showToast('Aceite ou recuse a troca pendente antes de fechar.', 'warning');
+                return;
+            }
             if (modal) modal.classList.remove('active');
             return;
         }
 
         if (event.target.classList.contains('modal-overlay')) {
+            if (event.target.classList.contains('swap-action-required')) {
+                showToast('Aceite ou recuse a troca pendente antes de fechar.', 'warning');
+                return;
+            }
             event.target.classList.remove('active');
         }
     });

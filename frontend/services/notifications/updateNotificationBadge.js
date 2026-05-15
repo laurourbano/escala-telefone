@@ -15,3 +15,14 @@ function updateNotificationBadge() {
         badge.style.display = 'none';
     }
 }
+
+function openPendingSwapAlert() {
+    if (!state.currentUser) return;
+    const hasPending = state.notifications.some(n =>
+        n.toId === state.currentUser.id && n.status === 'pending'
+    );
+    if (!hasPending) return;
+
+    renderNotifications();
+    document.getElementById('modal-notifications').classList.add('active');
+}

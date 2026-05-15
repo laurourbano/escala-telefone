@@ -82,13 +82,10 @@ function renderScheduleBoard() {
                 var totalShifts = Array.from(document.querySelectorAll('.shift-dropzone'))
                     .reduce(function (count, dz) { return count + Array.from(dz.children).filter(function (child) { return child.dataset.personId === personId; }).length; }, 0);
 
-                if (totalShifts > person.maxShifts) {
-                    event.from.appendChild(event.item);
-                    showToast(person.name + ' já atingiu o limite máximo de ' + person.maxShifts + ' turno' + (person.maxShifts !== 1 ? 's' : '') + '.', 'warning');
-                    return;
-                }
-
                 updateScheduleFromDOM();
+                if (totalShifts > person.maxShifts) {
+                    showToast(person.name + ' ficou com turno extra nesta semana. O sistema vai priorizar outros funcionarios nas proximas escalas.', 'warning');
+                }
             }
         }));
     });

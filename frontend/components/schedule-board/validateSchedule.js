@@ -3,7 +3,7 @@ function validateSchedule() {
     var hasError = false;
 
     document.querySelectorAll('.scheduled-person').forEach(function (element) {
-        element.classList.remove('conflict-item', 'error-item');
+        element.classList.remove('conflict-item', 'error-item', 'extra-item');
     });
 
     var personShiftCount = {};
@@ -63,10 +63,14 @@ function validateSchedule() {
     for (var personId in personShiftCount) {
         var person = state.people.find(function (person) { return person.id === personId; });
         if (person && personShiftCount[personId] > person.maxShifts) {
-            hasError = true;
-            state.shifts.forEach(function (shift) {
-                days.forEach(function (date) {
-                    if ((state.schedule[shift.id + '-' + date] || []).indexOf(personId) !== -1) highlightPerson(shift.id, date, personId, 'error-item');
+            hasWarning = true;
+            var seen = 0;
+            days.forEach(function (date) {
+                state.shifts.forEach(function (shift) {
+                    if ((state.schedule[shift.id + '-' + date] || []).indexOf(personId) !== -1) {
+                        seen++;
+                        if (seen > person.maxShifts) highlightPerson(shift.id, date, personId, 'extra-item');
+                    }
                 });
             });
         }
@@ -94,7 +98,7 @@ function validateSchedule() {
 
     var statusHtml = '';
     if (hasError) {
-        statusHtml = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos (2 no mesmo dia / Excesso / Atestado)</span>';
+        statusHtml = '<span class="status-badge warning" style="color: var(--danger); border-color: var(--danger); background: rgba(239,68,68,0.1)"><i class="ph ph-warning"></i> Conflitos (2 no mesmo dia / Atestado)</span>';
     } else if (hasWarning) {
         statusHtml = '<span class="status-badge warning"><i class="ph ph-warning"></i> Distribuicao Desbalanceada</span>';
     } else {

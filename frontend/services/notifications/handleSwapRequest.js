@@ -12,6 +12,18 @@ function handleSwapRequest(event) {
 
     const [targetShiftId, targetDate] = targetShiftRaw.split('|');
 
+    if (myDate !== targetDate) {
+        if (hasScheduleConflict(state.currentUser.id, targetDate)) {
+            showToast('Voce ja esta escalado no dia do turno solicitado. A troca nao pode prosseguir.', 'error');
+            return;
+        }
+
+        if (hasScheduleConflict(targetPersonId, myDate)) {
+            showToast('O colega ja esta escalado no dia do seu turno. A troca nao pode prosseguir.', 'error');
+            return;
+        }
+    }
+
     state.notifications.push({
         id: generateId(),
         fromId: state.currentUser.id,

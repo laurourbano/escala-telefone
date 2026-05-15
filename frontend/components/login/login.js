@@ -15,6 +15,7 @@ function checkAuth() {
         }
 
         updateNotificationBadge();
+        openPendingSwapAlert();
     } else {
         document.getElementById('login-overlay').classList.add('active');
         document.getElementById('topbar-user-actions').style.display = 'none';

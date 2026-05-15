@@ -38,3 +38,25 @@
     display: flex;
     gap: 0.5rem;
 }
+
+.swap-alert-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    border-radius: 10px;
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--text-main);
+}
+
+.swap-alert-banner span {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.swap-action-required .modal {
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3), 0 20px 40px rgba(0, 0, 0, 0.4);
+}

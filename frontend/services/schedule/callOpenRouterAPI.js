@@ -12,14 +12,14 @@ async function callOpenRouterAPI() {
 Regras:
 1. São dias úteis (seg-sex), ignorar finais de semana e feriados
 2. Respeitar a capacidade máxima de cada turno
-3. Respeitar o máximo de turnos por pessoa (maxShifts)
+3. Preferir respeitar o máximo de turnos por pessoa (maxShifts), mas permitir exceder quando necessário para preencher vagas
 4. Não escalar pessoa que está em período de indisponibilidade (status !== disponivel OU data dentro do período unavailabilityStart-unavailabilityEnd)
 5. Preferir turnos preferenciais de cada pessoa (preferredShifts)
 6. Distribuir a carga de forma equilibrada entre as pessoas
 7. Uma pessoa NÃO pode estar em dois turnos diferentes no mesmo dia
 8. A pessoa pode ficar vaga se não houver candidatos disponíveis
 9. A escala desta semana DEVE ser DIFERENTE da semana anterior (lastWeekAssignments). Não repita a mesma pessoa no mesmo turno no mesmo dia da semana
-10. Use shiftCounts (total de turnos acumulados por pessoa historicamente) para priorizar quem tem menos turnos, garantindo distribuição justa ao longo do tempo
+10. Use shiftCounts (total de turnos acumulados por pessoa historicamente) para priorizar quem tem menos turnos, garantindo distribuição justa ao longo do tempo e compensando quem fez turno extra antes
 
 Responda APENAS com JSON válido no formato:
 {"assignments":[{"shiftId":"id_do_turno","day":"YYYY-MM-DD","peopleIds":["id_da_pessoa1","id_da_pessoa2"]}]}

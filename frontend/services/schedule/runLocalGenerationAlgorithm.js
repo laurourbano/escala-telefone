@@ -35,6 +35,26 @@ function runLocalGenerationAlgorithm() {
                     needed--;
                 }
             }
+
+            if (needed > 0) {
+                const extraAvailable = available
+                    .filter(person => !assignedToday[day].includes(person.id))
+                    .sort((a, b) => {
+                        const totalA = Object.values(state.schedule).filter(arr => arr.includes(a.id)).length;
+                        const totalB = Object.values(state.schedule).filter(arr => arr.includes(b.id)).length;
+                        const overA = Math.max(0, totalA - a.maxShifts + 1);
+                        const overB = Math.max(0, totalB - b.maxShifts + 1);
+                        if (overA !== overB) return overA - overB;
+                        return (state.shiftCounts[a.id] || 0) - (state.shiftCounts[b.id] || 0);
+                    });
+
+                for (let person of extraAvailable) {
+                    if (needed <= 0) break;
+                    state.schedule[`${shift.id}-${day}`].push(person.id);
+                    assignedToday[day].push(person.id);
+                    needed--;
+                }
+            }
         });
     });
 }
