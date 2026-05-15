@@ -20,8 +20,8 @@ async function syncLoginWithServer(email, password) {
             state.config.serverToken = data.token;
             state.config.serverUrl = serverUrl;
             saveState();
-            loadConfigFromServer();
-            loadScheduleFromServer();
+            await loadConfigFromServer();
+            await loadScheduleFromServer();
         }
     } catch (err) {
         console.log('Servidor não disponível, usando apenas local.');
