@@ -21,11 +21,12 @@ async function syncLoginWithServer(email, password) {
             const data = await response.json();
             state.config.serverToken = data.token;
             state.config.serverUrl = serverUrl;
-            console.log('syncLoginWithServer: token obtido, chamando saveState');
-            saveState();
-            console.log('syncLoginWithServer: chamando loadScheduleFromServer');
-            await loadConfigFromServer();
+
+            localStorage.setItem('escala_config', JSON.stringify(state.config));
+
+            console.log('syncLoginWithServer: carregando schedule primeiro');
             await loadScheduleFromServer();
+            await loadConfigFromServer();
             console.log('syncLoginWithServer: completo');
         }
     } catch (err) {
