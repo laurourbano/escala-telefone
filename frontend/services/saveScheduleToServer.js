@@ -1,4 +1,5 @@
 async function saveStateToServer() {
+    console.log('saveStateToServer: token?', !!state.config.serverToken, 'url?', !!state.config.serverUrl, 'people:', state.people.length, 'shifts:', state.shifts.length);
     if (!state.config.serverToken || !state.config.serverUrl) {
         updateSyncStatus('offline');
         return;
@@ -7,6 +8,7 @@ async function saveStateToServer() {
     try {
         updateSyncStatus('syncing');
         const serverUrl = state.config.serverUrl;
+        console.log('saveStateToServer: PUT /api/appdata');
         const response = await fetch(`${serverUrl}/api/appdata`, {
             method: 'PUT',
             headers: {

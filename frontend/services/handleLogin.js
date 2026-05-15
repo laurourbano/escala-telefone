@@ -1,5 +1,6 @@
 function handleLogin(event) {
     event.preventDefault();
+    console.log('handleLogin: iniciando');
     const username = document.getElementById('login-username').value.toLowerCase().trim();
     const password = document.getElementById('login-password').value;
     const errorElement = document.getElementById('login-error');
@@ -34,6 +35,7 @@ function handleLogin(event) {
     }
 
     if (person) {
+        console.log('handleLogin: pessoa encontrada/criada', person.name);
         state.currentUser = person;
         saveState();
         checkAuth();

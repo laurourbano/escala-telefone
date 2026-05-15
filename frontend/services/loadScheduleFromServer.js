@@ -11,17 +11,22 @@ function updateLocalStorage() {
 }
 
 async function loadStateFromServer() {
-    if (!state.config.serverToken || !state.config.serverUrl) return;
+    if (!state.config.serverToken || !state.config.serverUrl) {
+        console.log('loadStateFromServer: sem token ou url');
+        return;
+    }
 
     try {
         updateSyncStatus('syncing');
         const serverUrl = state.config.serverUrl;
+        console.log('loadStateFromServer: fetching...');
         const response = await fetch(`${serverUrl}/api/appdata`, {
             headers: { 'Authorization': `Bearer ${state.config.serverToken}` }
         });
 
         if (response.ok) {
             const data = await response.json();
+            console.log('loadStateFromServer: data received', { people: data.people?.length, shifts: data.shifts?.length, schedule: Object.keys(data.schedule || {}).length });
 
             let updated = false;
 
@@ -62,6 +67,7 @@ async function loadStateFromServer() {
                 state.currentUser = data.current_user;
             }
 
+            console.log('loadStateFromServer: updated?', updated);
             if (updated) {
                 state.needsSync = false;
                 localStorage.setItem('escala_needs_sync', 'false');
@@ -78,9 +84,11 @@ async function loadStateFromServer() {
                 updateSyncStatus('online');
             }
         } else {
+            console.log('loadStateFromServer: response not ok', response.status);
             updateSyncStatus('offline');
         }
     } catch (err) {
+        console.log('loadStateFromServer: erro', err);
         updateSyncStatus('offline');
         console.log('Servidor indisponível no momento.');
     }
