@@ -11,6 +11,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:5500',
   'https://laurourbano.github.io',
+  'https://escalatelefone.netlify.app',
   ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
 ];
 
