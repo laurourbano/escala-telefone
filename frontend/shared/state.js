@@ -21,17 +21,6 @@ let state = {
     needsSync: localStorage.getItem('escala_needs_sync') === 'true' || false
 };
 
-if (state.people.length === 0 && state.shifts.length === 0) {
-    state.people = [
-        { id: 'p-admin', name: 'Admin', status: 'disponivel', maxShifts: 4, preferredShifts: [], password: '3820', isAdmin: true, unavailabilityStart: '', unavailabilityEnd: '' }
-    ];
-    state.shifts = [
-        { id: 's-manha', name: 'Manhã', time: '08:00-12:00', capacity: 2 },
-        { id: 's-tarde', name: 'Tarde', time: '13:00-17:00', capacity: 2 },
-        { id: 's-noite', name: 'Noite', time: '18:00-22:00', capacity: 1 }
-    ];
-}
-
 state.people.forEach(person => {
     if (!person.password) person.password = '3820';
     if (person.isAdmin === undefined) person.isAdmin = false;
