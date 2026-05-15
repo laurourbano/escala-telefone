@@ -9,7 +9,8 @@ async function init() {
         loadComponent('dynamic-components', 'frontend/components/swap-modal/swap-modal.html'),
         loadComponent('dynamic-components', 'frontend/components/notifications-modal/notifications-modal.html'),
         loadComponent('dynamic-components', 'frontend/components/change-password-modal/change-password-modal.html'),
-        loadComponent('dynamic-components', 'frontend/components/ai-loading/ai-loading.html')
+        loadComponent('dynamic-components', 'frontend/components/ai-loading/ai-loading.html'),
+        loadComponent('dynamic-components', 'frontend/components/bulk-status/bulk-status.html')
     ]);
 
 

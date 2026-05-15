@@ -15,16 +15,16 @@ function renderPeople() {
     var totalShifts = state.shifts.length;
     var days = getWorkingDays();
     state.people.forEach(function (person) {
-        var partialShifts = person.maxShifts > 0 && person.preferredShifts && person.preferredShifts.length < totalShifts;
+        var partialShifts = person.status === 'disponivel' && person.maxShifts > 0 && person.preferredShifts && person.preferredShifts.length < totalShifts;
         if (peopleFilter === 'available' && (person.status !== 'disponivel' || partialShifts)) return;
         if (peopleFilter === 'available-partial' && person.status !== 'disponivel' && !partialShifts) return;
         if (peopleFilter === 'indisponivel' && person.status !== 'indisponivel') return;
         if (peopleFilter === 'afastados' && person.status !== 'folga' && person.status !== 'ferias' && person.status !== 'atestado') return;
         var card = document.createElement('div');
-        card.className = 'card';
+        card.className = 'card card-' + person.status;
         var isOwner = generateEmail(person.name) === 'lauro.urbano@crf-pr.org.br';
         var adminBadge = person.isAdmin || isOwner
-            ? '<span class="badge" style="background: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.5); color: #ca8a04;"><i class="ph ph-crown-simple"></i> Admin</span>'
+            ? '<span class="badge" style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.5); color: var(--primary);"><i class="ph ph-crown-simple"></i> Admin</span>'
             : '';
         var toggleAdminBtn = currentIsAdmin && !isOwner
             ? '<button title="' + (person.isAdmin ? 'Remover admin' : 'Tornar admin') + '" onclick="toggleAdmin(\'' + person.id + '\')" style="color: ' + (person.isAdmin ? 'var(--danger)' : 'var(--accent)') + ';"><i class="ph ph-crown-simple"></i></button>'
@@ -33,10 +33,10 @@ function renderPeople() {
         for (var key in state.schedule) {
             if (state.schedule[key].indexOf(person.id) !== -1) assignedCount++;
         }
-        var noShiftsAssigned = assignedCount === 0 && person.maxShifts > 0;
+        var noShiftsAssigned = person.status === 'disponivel' && assignedCount === 0 && person.maxShifts > 0;
         var evidenceBadge = '';
         if (person.maxShifts === 0) {
-            evidenceBadge = '<span class="badge" style="background: rgba(148,163,184,0.15); border: 1px solid rgba(148,163,184,0.4); color: #94a3b8;"><i class="ph ph-x-circle"></i> 0 horários/semana</span>';
+            evidenceBadge = '<span class="badge" style="background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.4); color: #06b6d4;"><i class="ph ph-x-circle"></i> 0 horários/semana</span>';
             card.classList.add('card-zero-shifts');
         } else if (noShiftsAssigned) {
             evidenceBadge = '<span class="badge" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: var(--danger);"><i class="ph ph-warning-circle"></i> Sem turnos</span>';

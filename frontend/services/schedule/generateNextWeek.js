@@ -1,10 +1,10 @@
 function generateNextWeek(skipConfirm = false) {
     if (!skipConfirm) {
-        showConfirm(
-            'Gerar Próxima Semana',
-            'Avançar para a próxima semana e gerar uma nova escala? A escala atual será substituída.',
-            () => generateNextWeek(true)
-        );
+        showConfirm({
+            title: 'Gerar Próxima Semana',
+            message: 'Avançar para a próxima semana e gerar uma nova escala? A escala atual será substituída.',
+            onConfirm: () => generateNextWeek(true)
+        });
         return;
     }
 

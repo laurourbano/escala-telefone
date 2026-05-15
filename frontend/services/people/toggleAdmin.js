@@ -5,11 +5,11 @@ function toggleAdmin(id, skipConfirm = false) {
     const action = person.isAdmin ? 'remover o acesso de administrador de' : 'tornar administrador';
     
     if (!skipConfirm) {
-        showConfirm(
-            'Confirmar Ação',
-            `Tem certeza que deseja ${action} ${getFirstName(person.name)}?`,
-            () => toggleAdmin(id, true)
-        );
+        showConfirm({
+            title: 'Confirmar Ação',
+            message: `Tem certeza que deseja ${action} ${getFirstName(person.name)}?`,
+            onConfirm: () => toggleAdmin(id, true)
+        });
         return;
     }
     

@@ -84,7 +84,10 @@
             <section id="panel-pessoas" class="panel hidden">
                 <div class="panel-header">
                     <h3>Gerenciar Equipe</h3>
-                    <button id="btn-add-person" class="icon-btn"><i class="ph ph-plus"></i> Nova Pessoa</button>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button id="btn-bulk-status" class="secondary-btn"><i class="ph ph-calendar-x"></i> Afastamentos (Em Lote)</button>
+                        <button id="btn-add-person" class="icon-btn"><i class="ph ph-plus"></i> Nova Pessoa</button>
+                    </div>
                 </div>
                 <div class="filter-bar" id="people-filter-bar">
                     <button class="filter-btn active" data-filter="all">Todos</button>
@@ -280,6 +283,7 @@
     <script src="frontend/services/people/editPerson.js"></script>
     <script src="frontend/services/people/deletePerson.js"></script>
     <script src="frontend/services/people/toggleAdmin.js"></script>
+    <script src="frontend/services/people/bulkStatus.js"></script>
     <script src="frontend/services/people/populatePersonSelect.js"></script>
     <!-- Services: Shifts -->
     <script src="frontend/services/shifts/sortShifts.js"></script>

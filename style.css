@@ -405,18 +405,44 @@ body {
 }
 
 .card.card-zero-shifts {
-    border-left: 4px solid #94a3b8;
-    background: linear-gradient(90deg, rgba(148,163,184,0.06), transparent);
+    border-left: 4px solid #06b6d4;
+    background: linear-gradient(90deg, rgba(6,182,212,0.06), transparent);
 }
 
 .card.card-no-shifts {
-    border-left: 4px solid var(--danger);
+    border-left: 4px solid #ef4444;
     background: linear-gradient(90deg, rgba(239,68,68,0.06), transparent);
 }
 
 .card.card-partial-shifts {
-    border-left: 4px solid var(--warning);
-    background: linear-gradient(90deg, rgba(245,158,11,0.06), transparent);
+    border-left: 4px solid #f97316;
+    background: linear-gradient(90deg, rgba(249,115,22,0.06), transparent);
+}
+
+/* Status Cards */
+.card.card-disponivel {
+    border-left: 4px solid #10b981;
+    background: linear-gradient(90deg, rgba(16,185,129,0.06), transparent);
+}
+
+.card.card-folga {
+    border-left: 4px solid #3b82f6;
+    background: linear-gradient(90deg, rgba(59,130,246,0.06), transparent);
+}
+
+.card.card-ferias {
+    border-left: 4px solid #ec4899;
+    background: linear-gradient(90deg, rgba(236,72,153,0.06), transparent);
+}
+
+.card.card-indisponivel {
+    border-left: 4px solid #64748b;
+    background: linear-gradient(90deg, rgba(100,116,139,0.06), transparent);
+}
+
+.card.card-atestado {
+    border-left: 4px solid #e11d48;
+    background: linear-gradient(90deg, rgba(225,29,72,0.06), transparent);
 }
 
 .card:hover {
@@ -479,23 +505,23 @@ body {
 }
 
 .badge.folga {
-    background-color: rgba(245, 158, 11, 0.15);
-    color: var(--warning);
+    background-color: rgba(59, 130, 246, 0.15);
+    color: var(--secondary);
 }
 
 .badge.ferias {
-    background-color: rgba(139, 92, 246, 0.15);
-    color: var(--primary);
+    background-color: rgba(236, 72, 153, 0.15);
+    color: #ec4899;
 }
 
 .badge.indisponivel {
-    background-color: rgba(148, 163, 184, 0.15);
-    color: #94a3b8;
+    background-color: rgba(100, 116, 139, 0.15);
+    color: #64748b;
 }
 
 .badge.atestado {
-    background-color: rgba(239, 68, 68, 0.15);
-    color: var(--danger);
+    background-color: rgba(225, 29, 72, 0.15);
+    color: #e11d48;
 }
 
 .card-meta {

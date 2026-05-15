@@ -1,10 +1,10 @@
-async function generateSchedule(skipConfirm) {
+async function generateSchedule(skipConfirm = false) {
     if (!skipConfirm) {
-        showConfirm(
-            'Tem certeza que deseja gerar uma nova escala?',
-            'A escala atual será substituída.',
-            () => generateSchedule(true)
-        );
+        showConfirm({
+            title: 'Gerar Nova Escala',
+            message: 'Tem certeza que deseja gerar uma nova escala? Isso substituirá a escala atual.',
+            onConfirm: () => generateSchedule(true)
+        });
         return;
     }
 

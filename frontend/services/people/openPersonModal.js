@@ -10,7 +10,7 @@ function openPersonModal(person = null) {
     const container = document.getElementById('person-preferred-shifts');
     container.innerHTML = state.shifts.map(shift => `
         <label class="checkbox-label">
-            <input type="checkbox" name="pref-shifts" value="${shift.id}" ${person && person.preferredShifts && person.preferredShifts.includes(shift.id) ? 'checked' : ''}>
+            <input type="checkbox" name="pref-shifts" value="${shift.id}" ${(!person || (person.preferredShifts && person.preferredShifts.includes(shift.id))) ? 'checked' : ''}>
             ${shift.name}
         </label>
     `).join('');
@@ -19,4 +19,9 @@ function openPersonModal(person = null) {
     document.getElementById('unavailability-dates').style.display = status === 'disponivel' ? 'none' : 'block';
 
     document.getElementById('modal-person').classList.add('active');
+    
+    // Set focus to the first field
+    setTimeout(() => {
+        document.getElementById('person-name').focus();
+    }, 100);
 }

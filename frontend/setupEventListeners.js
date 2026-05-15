@@ -32,14 +32,26 @@ function setupEventListeners() {
     document.getElementById('swap-target-person').addEventListener('change', function (event) {
         updateSwapTargetShifts(event.target.value);
     });
+
+    document.getElementById('btn-bulk-status').addEventListener('click', () => {
+        openBulkStatusModal();
+    });
+
+    document.getElementById('btn-save-bulk-status').addEventListener('click', () => {
+        saveBulkStatus();
+    });
+
     document.getElementById('form-swap').addEventListener('submit', handleSwapRequest);
     document.getElementById('btn-add-person').addEventListener('click', function () { openPersonModal(); });
     document.querySelectorAll('#people-filter-bar .filter-btn').forEach(function (btn) {
         btn.addEventListener('click', function () { setPeopleFilter(btn.dataset.filter); });
     });
     document.getElementById('btn-add-shift').addEventListener('click', function () { openShiftModal(); });
-    document.querySelectorAll('.close-modal').forEach(function (button) {
-        button.addEventListener('click', function (event) { event.target.closest('.modal-overlay').classList.remove('active'); });
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('.close-modal')) {
+            const modal = event.target.closest('.modal-overlay');
+            if (modal) modal.classList.remove('active');
+        }
     });
     document.getElementById('form-person').addEventListener('submit', savePerson);
     document.getElementById('form-shift').addEventListener('submit', saveShift);

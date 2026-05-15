@@ -1,5 +1,5 @@
-function savePerson(event) {
-    event.preventDefault();
+function savePerson(event, skipConfirm = false) {
+    if (event) event.preventDefault();
     const id = document.getElementById('person-id').value;
     const name = toTitleCase(document.getElementById('person-name').value.trim());
     const status = document.getElementById('person-status').value;
@@ -13,11 +13,20 @@ function savePerson(event) {
 
     if (!name) { showToast('O nome é obrigatório.', 'warning'); return; }
 
+    // Require confirmation only if updating
+    if (id && !skipConfirm) {
+        showConfirm({
+            title: 'Confirmar Atualização',
+            message: `Tem certeza que deseja salvar as alterações de ${getFirstName(name)}?`,
+            onConfirm: () => savePerson(null, true)
+        });
+        return;
+    }
 
+    let isNew = false;
     if (id) {
         const index = state.people.findIndex(p => p.id === id);
         if (index !== -1) {
-            const wasUnavailable = state.people[index].status !== 'disponivel';
             state.people[index].name = name;
             state.people[index].status = finalStatus;
             state.people[index].maxShifts = maxShifts;
@@ -32,6 +41,7 @@ function savePerson(event) {
             }
         }
     } else {
+        isNew = true;
         state.people.push({
             id: generateId(),
             name,
@@ -52,6 +62,11 @@ function savePerson(event) {
     sortPeople();
     saveState();
     renderPeople();
-    closeModal('modal-person');
-    showToast('Pessoa salva com sucesso!', 'success');
+    document.getElementById('modal-person').classList.remove('active');
+    
+    if (isNew) {
+        showToast(`${getFirstName(name)} foi adicionado(a) com sucesso!`, 'success');
+    } else {
+        showToast(`${getFirstName(name)} foi atualizado(a) com sucesso!`, 'success');
+    }
 }
