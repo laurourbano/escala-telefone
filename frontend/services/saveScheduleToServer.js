@@ -36,11 +36,17 @@ async function saveStateToServer() {
         });
 
         if (response.ok) {
+            state.needsSync = false;
+            localStorage.setItem('escala_needs_sync', 'false');
             updateSyncStatus('online');
         } else {
+            state.needsSync = true;
+            localStorage.setItem('escala_needs_sync', 'true');
             updateSyncStatus('offline');
         }
     } catch (err) {
+        state.needsSync = true;
+        localStorage.setItem('escala_needs_sync', 'true');
         updateSyncStatus('offline');
         console.log('Servidor indisponível. Não foi possível salvar.');
     }

@@ -1,24 +1,24 @@
 let state = {
-    people: [],
-    shifts: [],
-    schedule: {},
-    config: {
-        apiKey: '',
-        openrouterKey: '',
-        openrouterModel: 'meta-llama/llama-4-maverick-17b-128e-instruct',
-        geminiKey: '',
-        provider: 'openrouter',
-        serverUrl: 'https://escalai-backend.onrender.com',
-        serverToken: ''
+    people: JSON.parse(localStorage.getItem('escala_people')) || [],
+    shifts: JSON.parse(localStorage.getItem('escala_shifts')) || [],
+    schedule: JSON.parse(localStorage.getItem('escala_schedule')) || {},
+    config: JSON.parse(localStorage.getItem('escala_config')) || { 
+        apiKey: '', 
+        openrouterKey: '', 
+        openrouterModel: 'meta-llama/llama-4-maverick-17b-128e-instruct', 
+        geminiKey: '', 
+        provider: 'openrouter', 
+        serverUrl: 'https://escalai-backend.onrender.com', 
+        serverToken: '' 
     },
-    scheduleStartDate: '',
-    scheduleEndDate: '',
-    closedDates: [],
-    currentUser: null,
-    notifications: [],
-    lastSchedule: {},
-    shiftCounts: {},
-    needsSync: false
+    scheduleStartDate: localStorage.getItem('escala_start_date') || '',
+    scheduleEndDate: localStorage.getItem('escala_end_date') || '',
+    closedDates: JSON.parse(localStorage.getItem('escala_closed_dates')) || [],
+    currentUser: JSON.parse(localStorage.getItem('escala_current_user')) || null,
+    notifications: JSON.parse(localStorage.getItem('escala_notifications')) || [],
+    lastSchedule: JSON.parse(localStorage.getItem('escala_last_schedule')) || {},
+    shiftCounts: JSON.parse(localStorage.getItem('escala_shift_counts')) || {},
+    needsSync: localStorage.getItem('escala_needs_sync') === 'true' || false
 };
 
 state.people.forEach(person => {
