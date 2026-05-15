@@ -8,12 +8,12 @@ function openBulkStatusModal() {
     let html = '';
     people.forEach(p => {
         const isDisponivel = p.status === 'disponivel';
+        const isIndisponivel = p.status === 'indisponivel';
         const isFolga = p.status === 'folga';
         const isFerias = p.status === 'ferias';
         const isAtestado = p.status === 'atestado';
         
-        // Use default 'disponivel' if they are something else like 'indisponivel' unless we want to map it
-        const finalDisponivel = isDisponivel || (!isFolga && !isFerias && !isAtestado);
+        const finalDisponivel = isDisponivel || (!isIndisponivel && !isFolga && !isFerias && !isAtestado);
 
         html += `
             <div class="bulk-status-row" data-id="${p.id}" style="display: grid; grid-template-columns: 2fr 3.5fr 1fr 1fr; gap: 0.5rem; align-items: center; background: rgba(255,255,255,0.05); padding: 0.8rem; border-radius: 8px;">
@@ -21,6 +21,7 @@ function openBulkStatusModal() {
                 
                 <div class="radio-group" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <label class="checkbox-label" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;"><input type="radio" name="status-${p.id}" value="disponivel" ${finalDisponivel ? 'checked' : ''}> Disponível</label>
+                    <label class="checkbox-label" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;"><input type="radio" name="status-${p.id}" value="indisponivel" ${isIndisponivel ? 'checked' : ''}> Indisponível</label>
                     <label class="checkbox-label" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;"><input type="radio" name="status-${p.id}" value="folga" ${isFolga ? 'checked' : ''}> Folga</label>
                     <label class="checkbox-label" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;"><input type="radio" name="status-${p.id}" value="ferias" ${isFerias ? 'checked' : ''}> Férias</label>
                     <label class="checkbox-label" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;"><input type="radio" name="status-${p.id}" value="atestado" ${isAtestado ? 'checked' : ''}> Atestado</label>
