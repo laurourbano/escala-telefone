@@ -51,6 +51,11 @@ function setupEventListeners() {
         if (event.target.closest('.close-modal')) {
             const modal = event.target.closest('.modal-overlay');
             if (modal) modal.classList.remove('active');
+            return;
+        }
+
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
         }
     });
     document.getElementById('form-person').addEventListener('submit', savePerson);
