@@ -1,8 +1,4 @@
 async function saveStateToServer() {
-    if (!state.config.serverToken && state.currentUser) {
-        await ensureServerAuth();
-    }
-
     if (!state.config.serverToken || !state.config.serverUrl) {
         updateSyncStatus('offline');
         return;

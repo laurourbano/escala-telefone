@@ -5,5 +5,4 @@ function syncConfigFromInputs() {
     if (serverUrlInput) state.config.serverUrl = serverUrlInput.value;
     const checkedProvider = document.querySelector('input[name="ai-provider"]:checked');
     if (checkedProvider) state.config.provider = checkedProvider.value;
-    saveState();
 }
