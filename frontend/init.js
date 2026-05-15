@@ -1,4 +1,18 @@
-function init() {
+async function init() {
+    if (state.config.serverToken && state.config.serverUrl) {
+        await loadStateFromServer();
+    }
+
+    if (!state.scheduleStartDate) {
+        const today = new Date();
+        const nextMonday = new Date(today);
+        nextMonday.setDate(today.getDate() + ((1 + 7 - today.getDay()) % 7 || 7));
+        state.scheduleStartDate = nextMonday.toISOString().split('T')[0];
+        const nextFriday = new Date(nextMonday);
+        nextFriday.setDate(nextMonday.getDate() + 4);
+        state.scheduleEndDate = nextFriday.toISOString().split('T')[0];
+    }
+
     sortShifts();
     state.people.forEach(function (person) {
         if (person.name) person.name = toTitleCase(person.name);
@@ -25,19 +39,15 @@ function init() {
     populatePersonSelect();
     checkAuth();
     saveState();
-    loadScheduleFromServer().catch(function () {});
 
-    // Poller de sincronização: tenta sincronizar a cada 30 segundos se houver pendências
     setInterval(function() {
-        if (state.needsSync && typeof saveScheduleToServer === 'function') {
-            console.log('Tentando sincronização pendente...');
-            saveScheduleToServer().catch(function() {});
+        if (state.needsSync && typeof saveStateToServer === 'function') {
+            saveStateToServer().catch(function() {});
         }
     }, 30000);
 
-    // Tenta sincronizar assim que a conexão voltar
     window.addEventListener('online', function() {
-        if (state.needsSync) saveScheduleToServer().catch(function() {});
+        if (state.needsSync) saveStateToServer().catch(function() {});
     });
 }
 

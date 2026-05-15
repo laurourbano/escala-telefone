@@ -1,13 +1,9 @@
-async function saveScheduleToServer() {
-    // Tenta autenticar se não houver token mas houver um usuário logado localmente
+async function saveStateToServer() {
     if (!state.config.serverToken && state.currentUser) {
         await ensureServerAuth();
     }
 
-    // Se ainda não houver token ou URL, marcamos como precisando de sincronia e paramos
     if (!state.config.serverToken || !state.config.serverUrl) {
-        state.needsSync = true;
-        localStorage.setItem('escala_needs_sync', 'true');
         updateSyncStatus('offline');
         return;
     }
@@ -15,35 +11,46 @@ async function saveScheduleToServer() {
     try {
         updateSyncStatus('syncing');
         const serverUrl = state.config.serverUrl;
-        const response = await fetch(`${serverUrl}/api/schedule`, {
+        const response = await fetch(`${serverUrl}/api/appdata`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${state.config.serverToken}`
             },
             body: JSON.stringify({
+                people: state.people,
+                shifts: state.shifts,
                 schedule: state.schedule,
+                config: {
+                    openrouter_key: state.config.openrouterKey || '',
+                    openrouter_model: state.config.openrouterModel || '',
+                    gemini_key: state.config.geminiKey || '',
+                    provider: state.config.provider || 'openrouter',
+                    serverUrl: state.config.serverUrl || '',
+                    serverToken: state.config.serverToken || ''
+                },
                 start_date: state.scheduleStartDate,
                 end_date: state.scheduleEndDate,
-                people: state.people,
-                shifts: state.shifts
+                closed_dates: state.closedDates,
+                current_user: state.currentUser,
+                notifications: state.notifications,
+                last_schedule: state.lastSchedule,
+                shift_counts: state.shiftCounts
             })
         });
 
         if (response.ok) {
-            // Sincronizado com sucesso!
-            state.needsSync = false;
-            localStorage.setItem('escala_needs_sync', 'false');
             updateSyncStatus('online');
-            console.log('Dados sincronizados com o servidor com sucesso.');
         } else {
-            throw new Error('Erro na resposta do servidor');
+            updateSyncStatus('offline');
         }
     } catch (err) {
-        // Se falhar, garantimos que o flag de sincronia continue true
-        state.needsSync = true;
-        localStorage.setItem('escala_needs_sync', 'true');
         updateSyncStatus('offline');
-        console.log('Servidor indisponível. Alterações salvas localmente e aguardando conexão.');
+        console.log('Servidor indisponível. Não foi possível salvar.');
     }
+}
+
+// Mantém o nome antigo como alias para compatibilidade
+async function saveScheduleToServer() {
+    return saveStateToServer();
 }

@@ -1,20 +1,16 @@
-async function loadScheduleFromServer() {
+async function loadStateFromServer() {
     if (!state.config.serverToken || !state.config.serverUrl) return;
 
     try {
         updateSyncStatus('syncing');
         const serverUrl = state.config.serverUrl;
-        console.log('Buscando dados do servidor...');
-        const response = await fetch(`${serverUrl}/api/schedule`, {
+        const response = await fetch(`${serverUrl}/api/appdata`, {
             headers: { 'Authorization': `Bearer ${state.config.serverToken}` }
         });
 
         if (response.ok) {
             const data = await response.json();
-            updateSyncStatus('online');
-            
-            // ... (rest of the logic)
-            
+
             let updated = false;
 
             if (data.schedule && Object.keys(data.schedule).length > 0) {
@@ -31,31 +27,51 @@ async function loadScheduleFromServer() {
                 state.shifts = data.shifts;
                 updated = true;
             }
+            if (data.closed_dates) {
+                state.closedDates = data.closed_dates;
+                updated = true;
+            }
+            if (data.notifications) {
+                state.notifications = data.notifications;
+            }
+            if (data.last_schedule) {
+                state.lastSchedule = data.last_schedule;
+            }
+            if (data.shift_counts) {
+                state.shiftCounts = data.shift_counts;
+            }
+            if (data.config) {
+                state.config.openrouterKey = data.config.openrouter_key || '';
+                state.config.openrouterModel = data.config.openrouter_model || '';
+                state.config.geminiKey = data.config.gemini_key || '';
+                state.config.provider = data.config.provider || 'openrouter';
+            }
+            if (data.current_user) {
+                state.currentUser = data.current_user;
+            }
 
             if (updated) {
-                console.log('Dados carregados do servidor com sucesso.');
-                // Ao carregar do servidor, assumimos que estamos sincronizados
                 state.needsSync = false;
-                localStorage.setItem('escala_needs_sync', 'false');
                 updateSyncStatus('online');
-                
-                // Salva no localStorage como backup
-                saveState(); 
-                
-                // Atualiza a UI
+
                 renderPeople();
                 renderShifts();
                 renderScheduleBoard();
                 validateSchedule();
                 populatePersonSelect();
-            } else if (state.needsSync) {
-                // Se o servidor está vazio mas temos dados locais pendentes, enviamos agora
-                console.log('Servidor vazio, enviando dados locais pendentes...');
-                saveScheduleToServer();
+            } else {
+                updateSyncStatus('online');
             }
+        } else {
+            updateSyncStatus('offline');
         }
     } catch (err) {
         updateSyncStatus('offline');
-        console.log('Servidor indisponível no momento. Usando backup local.');
+        console.log('Servidor indisponível no momento.');
     }
+}
+
+// Mantém o nome antigo como alias para compatibilidade
+async function loadScheduleFromServer() {
+    return loadStateFromServer();
 }

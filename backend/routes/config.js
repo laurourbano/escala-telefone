@@ -175,4 +175,38 @@ router.post('/baixa', async (req, res) => {
   }
 });
 
+// GET /api/appdata — obter todos os dados da aplicação
+router.get('/appdata', authMiddleware, async (req, res) => {
+  try {
+    const result = await query('SELECT data FROM appdata WHERE id = 1');
+    if (result.rows.length === 0 || !result.rows[0].data) {
+      return res.json({
+        people: [], shifts: [], schedule: {},
+        start_date: '', end_date: '', closed_dates: [],
+        config: { openrouter_key: '', openrouter_model: '', gemini_key: '', provider: 'openrouter', serverUrl: '', serverToken: '' },
+        notifications: [], last_schedule: {}, shift_counts: {}, current_user: null
+      });
+    }
+    res.json(result.rows[0].data);
+  } catch (err) {
+    console.error('Get appdata error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// PUT /api/appdata — salvar todos os dados da aplicação
+router.put('/appdata', authMiddleware, async (req, res) => {
+  try {
+    const data = req.body;
+    await query(`
+      INSERT INTO appdata (id, data, updated_at) VALUES (1, $1, NOW())
+      ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
+    `, [JSON.stringify(data)]);
+    res.json({ message: 'Dados salvos com sucesso' });
+  } catch (err) {
+    console.error('Save appdata error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;
