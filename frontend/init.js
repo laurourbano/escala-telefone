@@ -1,5 +1,21 @@
 async function init() {
+    // Load dynamic components
+    await Promise.all([
+        loadComponent('dynamic-components', 'frontend/components/toast/toast.html'),
+        loadComponent('dynamic-components', 'frontend/components/confirm/confirm.html'),
+        loadComponent('dynamic-components', 'frontend/components/login/login.html'),
+        loadComponent('dynamic-components', 'frontend/components/person-modal/person-modal.html'),
+        loadComponent('dynamic-components', 'frontend/components/shift-modal/shift-modal.html'),
+        loadComponent('dynamic-components', 'frontend/components/swap-modal/swap-modal.html'),
+        loadComponent('dynamic-components', 'frontend/components/notifications-modal/notifications-modal.html'),
+        loadComponent('dynamic-components', 'frontend/components/change-password-modal/change-password-modal.html'),
+        loadComponent('dynamic-components', 'frontend/components/ai-loading/ai-loading.html')
+    ]);
+
+
+
     if (state.config.serverToken && state.config.serverUrl) {
+
         await loadStateFromServer();
     }
 

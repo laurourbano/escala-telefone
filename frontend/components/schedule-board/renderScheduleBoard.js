@@ -75,7 +75,7 @@ function renderScheduleBoard() {
 
                 if (isDoubleBooked) {
                     event.from.appendChild(event.item);
-                    alert('Esta pessoa ja esta escalada em outro turno neste dia.');
+                    showToast('Esta pessoa já está escalada em outro turno neste dia.', 'error');
                     return;
                 }
 
@@ -84,7 +84,7 @@ function renderScheduleBoard() {
 
                 if (totalShifts > person.maxShifts) {
                     event.from.appendChild(event.item);
-                    alert(person.name + ' ja atingiu o limite maximo de ' + person.maxShifts + ' turno' + (person.maxShifts !== 1 ? 's' : '') + '.');
+                    showToast(person.name + ' já atingiu o limite máximo de ' + person.maxShifts + ' turno' + (person.maxShifts !== 1 ? 's' : '') + '.', 'warning');
                     return;
                 }
 

@@ -1,5 +1,12 @@
-function generateNextWeek() {
-    if (!confirm('Avançar para a próxima semana e gerar uma nova escala? A escala atual será substituída.')) return;
+function generateNextWeek(skipConfirm = false) {
+    if (!skipConfirm) {
+        showConfirm(
+            'Gerar Próxima Semana',
+            'Avançar para a próxima semana e gerar uma nova escala? A escala atual será substituída.',
+            () => generateNextWeek(true)
+        );
+        return;
+    }
 
     const advanceDate = (dateStr, days) => {
         const d = new Date(dateStr + 'T00:00:00');

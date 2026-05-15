@@ -1160,3 +1160,111 @@ input[readonly] {
 .hidden-admin {
     display: none !important;
 }
+
+/* =========================
+   CUSTOM FEEDBACK & TOASTS
+   ========================= */
+
+.toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 1000;
+}
+
+.toast {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    min-width: 300px;
+    max-width: 450px;
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    backdrop-filter: blur(10px);
+}
+
+.toast.active {
+    transform: translateX(0);
+}
+
+.toast i {
+    font-size: 1.5rem;
+}
+
+.toast-success i { color: var(--success); }
+.toast-error i { color: var(--danger); }
+.toast-info i { color: var(--secondary); }
+.toast-warning i { color: var(--warning); }
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+}
+
+.toast-message {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* =========================
+   CUSTOM CONFIRM DIALOG
+   ========================= */
+
+.confirm-modal .modal {
+    max-width: 400px;
+}
+
+.confirm-modal .modal-body {
+    padding: 1.5rem;
+    padding-top: 0.5rem;
+}
+
+.confirm-modal .confirm-icon {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.confirm-modal .confirm-icon i {
+    padding: 1rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.confirm-modal .confirm-title {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.confirm-modal .confirm-message {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+.confirm-modal .confirm-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.confirm-modal .confirm-actions button {
+    flex: 1;
+}

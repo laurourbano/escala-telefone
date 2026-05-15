@@ -1,0 +1,26 @@
+<div class="modal-overlay" id="modal-shift">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modal-shift-title">Adicionar Turno</h3>
+            <button class="close-modal"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="form-shift">
+                <input type="hidden" id="shift-id">
+                <div class="form-group">
+                    <label>Nome do Turno</label>
+                    <input type="text" id="shift-name" placeholder="Ex: Manhã" required>
+                </div>
+                <div class="form-group">
+                    <label>Horário</label>
+                    <input type="text" id="shift-time" placeholder="Ex: 08:00 - 14:00" required>
+                </div>
+                <div class="form-group">
+                    <label>Vagas Necessárias</label>
+                    <input type="number" id="shift-capacity" value="2" min="1" required>
+                </div>
+                <button type="submit" class="primary-btn w-full">Salvar</button>
+            </form>
+        </div>
+    </div>
+</div>

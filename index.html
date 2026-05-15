@@ -9,11 +9,12 @@
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%238b5cf6' d='M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-34.34-69.66a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,188.69l50.34-50.35A8,8,0,0,1,173.66,138.34Z'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
     <!-- Component Styles -->
-    <link rel="stylesheet" href="frontend/components/schedule-board.component.css">
-    <link rel="stylesheet" href="frontend/components/login.component.css">
-    <link rel="stylesheet" href="frontend/components/minha-escala.component.css">
-    <link rel="stylesheet" href="frontend/components/config.component.css">
-    <link rel="stylesheet" href="frontend/components/notifications.component.css">
+    <link rel="stylesheet" href="frontend/components/schedule-board/schedule-board.css">
+    <link rel="stylesheet" href="frontend/components/login/login.css">
+    <link rel="stylesheet" href="frontend/components/minha-escala/minha-escala.css">
+    <link rel="stylesheet" href="frontend/components/config/config.css">
+    <link rel="stylesheet" href="frontend/components/notifications/notifications.css">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Phosphor Icons for beautiful icons -->
     <script src="https://unpkg.com/@phosphor-icons/web@2.0.3"></script>
@@ -236,304 +237,91 @@
         </main>
     </div>
 
-    <!-- Modals -->
-    <div class="modal-overlay" id="modal-person">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 id="modal-person-title">Adicionar Pessoa</h3>
-                <button class="close-modal"><i class="ph ph-x"></i></button>
-            </div>
-            <div class="modal-body">
-                <form id="form-person">
-                    <input type="hidden" id="person-id">
-                    <div class="form-group">
-                        <label>Nome</label>
-                        <input type="text" id="person-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select id="person-status"
-                            onchange="handleStatusChange(this.value)">
-                            <option value="disponivel">Disponível</option>
-                            <option value="indisponivel">Indisponível</option>
-                            <option value="folga">Folga</option>
-                            <option value="ferias">Férias</option>
-                            <option value="atestado">Atestado</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="unavailability-dates" style="display: none;">
-                        <label>Período de Indisponibilidade</label>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="date" id="person-unavailability-start" class="date-input" style="flex: 1;">
-                            <span>até</span>
-                            <input type="date" id="person-unavailability-end" class="date-input" style="flex: 1;">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Máximo de Turnos</label>
-                        <input type="number" id="person-max-shifts" value="4" min="0">
-                    </div>
-                    <div class="form-group">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                            <label style="margin-bottom: 0;">Turnos Preferenciais</label>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button type="button" id="btn-select-all-shifts"
-                                    style="font-size: 0.7rem; color: var(--primary); background: transparent; border: none; cursor: pointer; padding: 0;">Marcar
-                                    Todos</button>
-                                <span style="color: var(--border); font-size: 0.7rem;">|</span>
-                                <button type="button" id="btn-deselect-all-shifts"
-                                    style="font-size: 0.7rem; color: var(--danger); background: transparent; border: none; cursor: pointer; padding: 0;">Desmarcar
-                                    Todos</button>
-                            </div>
-                        </div>
-                        <div id="person-preferred-shifts" class="checkbox-group">
-                            <!-- Populated dynamically -->
-                        </div>
-                    </div>
-                    <button type="submit" class="primary-btn w-full">Salvar</button>
-                </form>
-            </div>
-        </div>
-    </div>
+    <!-- Dynamic Components Placeholder -->
+    <div id="dynamic-components"></div>
 
-    <div class="modal-overlay" id="modal-shift">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 id="modal-shift-title">Adicionar Turno</h3>
-                <button class="close-modal"><i class="ph ph-x"></i></button>
-            </div>
-            <div class="modal-body">
-                <form id="form-shift">
-                    <input type="hidden" id="shift-id">
-                    <div class="form-group">
-                        <label>Nome do Turno</label>
-                        <input type="text" id="shift-name" placeholder="Ex: Manhã" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Horário</label>
-                        <input type="text" id="shift-time" placeholder="Ex: 08:00 - 14:00" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Vagas Necessárias</label>
-                        <input type="number" id="shift-capacity" value="2" min="1" required>
-                    </div>
-                    <button type="submit" class="primary-btn w-full">Salvar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Swap Modal -->
-    <div class="modal-overlay" id="modal-swap">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Solicitar Troca de Turno</h3>
-                <button class="close-modal"><i class="ph ph-x"></i></button>
-            </div>
-            <div class="modal-body">
-                <form id="form-swap">
-                    <input type="hidden" id="swap-my-shift-id">
-                    <input type="hidden" id="swap-my-date">
-
-                    <div class="form-group">
-                        <label>Meu Turno Selecionado</label>
-                        <p id="swap-my-details" style="font-size: 0.9rem; color: var(--text-muted);"></p>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Com quem deseja trocar?</label>
-                        <select id="swap-target-person" required>
-                            <option value="">Selecione um colega...</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Pelo turno dele em:</label>
-                        <select id="swap-target-shift" required disabled>
-                            <option value="">Selecione o turno do colega...</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="primary-btn w-full">Enviar Solicitação</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Notifications Modal -->
-    <div class="modal-overlay" id="modal-notifications">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Minhas Notificações</h3>
-                <button class="close-modal"><i class="ph ph-x"></i></button>
-            </div>
-            <div class="modal-body" id="notifications-list-container">
-                <!-- Populated dynamically -->
-                <div class="empty-state">
-                    <p>Não há novas notificações.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading Overlay for AI -->
-    <div class="loading-overlay hidden" id="ai-loading">
-        <div class="spinner"></div>
-        <p>A IA está organizando a escala de forma justa...</p>
-    </div>
-
-    <!-- Login Overlay -->
-    <div class="login-overlay active" id="login-overlay">
-        <div class="login-card">
-            <div class="login-header">
-                <i class="ph-fill ph-calendar-check"></i>
-                <h2>Bem-vindo ao EscalaAI</h2>
-                <p>Faça login para acessar sua escala</p>
-            </div>
-            <form id="form-login">
-                <div class="form-group">
-                    <label>Login Corporativo (nome.sobrenome)</label>
-                    <div class="input-wrapper email-input-wrapper">
-                        <i class="ph ph-user"></i>
-                        <input type="text" id="login-username" placeholder="nome.sobrenome" required>
-                        <span class="email-suffix">@crf-pr.org.br</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Senha</label>
-                    <div class="input-wrapper">
-                        <i class="ph ph-lock"></i>
-                        <input type="password" id="login-password" value="3820" required>
-                        <button type="button" class="toggle-password" data-target="login-password">
-                            <i class="ph ph-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                <button type="submit" class="primary-btn w-full">Entrar</button>
-                <p id="login-error" class="error-text hidden">E-mail ou senha incorretos.</p>
-            </form>
-        </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div class="modal-overlay" id="modal-change-password">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Alterar Minha Senha</h3>
-                <button class="close-modal"><i class="ph ph-x"></i></button>
-            </div>
-            <div class="modal-body">
-                <form id="form-change-password">
-                    <div class="form-group">
-                        <label>E-mail</label>
-                        <input type="email" id="pw-email" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label>Senha Atual</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="pw-current" required>
-                            <button type="button" class="toggle-password" data-target="pw-current">
-                                <i class="ph ph-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Nova Senha</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="pw-new" required>
-                            <button type="button" class="toggle-password" data-target="pw-new">
-                                <i class="ph ph-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Confirmar Nova Senha</label>
-                        <div class="input-wrapper">
-                            <input type="password" id="pw-confirm" required>
-                            <button type="button" class="toggle-password" data-target="pw-confirm">
-                                <i class="ph ph-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <button type="submit" class="primary-btn w-full">Confirmar Alteração</button>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Shared: State & Core -->
-    <script src="frontend/shared/state.js"></script>
-    <script src="frontend/shared/generateId.js"></script>
-    <script src="frontend/shared/saveState.js"></script>
+    <script src="frontend/shared/state/state.js"></script>
+    <script src="frontend/shared/state/saveState.js"></script>
     <!-- Shared: Utilities (one per function) -->
-    <script src="frontend/shared/toTitleCase.js"></script>
-    <script src="frontend/shared/getFirstName.js"></script>
-    <script src="frontend/shared/generateEmail.js"></script>
-    <script src="frontend/shared/formatDate.js"></script>
-    <script src="frontend/shared/calculateDefaultEndDate.js"></script>
-    <script src="frontend/shared/isPersonUnavailable.js"></script>
-    <script src="frontend/shared/getWorkingDays.js"></script>
-    <script src="frontend/shared/extractJSON.js"></script>
+    <script src="frontend/shared/utils/generateId.js"></script>
+    <script src="frontend/shared/utils/toTitleCase.js"></script>
+    <script src="frontend/shared/utils/getFirstName.js"></script>
+    <script src="frontend/shared/utils/generateEmail.js"></script>
+    <script src="frontend/shared/utils/formatDate.js"></script>
+    <script src="frontend/shared/utils/calculateDefaultEndDate.js"></script>
+    <script src="frontend/shared/utils/isPersonUnavailable.js"></script>
+    <script src="frontend/shared/utils/getWorkingDays.js"></script>
+    <script src="frontend/shared/utils/extractJSON.js"></script>
+    <script src="frontend/shared/utils/loadComponent.js"></script>
+    <script src="frontend/components/toast/toast.js"></script>
+    <script src="frontend/components/confirm/confirm.js"></script>
+
     <!-- Shared: DOM References -->
-    <script src="frontend/shared/dom.js"></script>
+
+    <script src="frontend/shared/dom/dom.js"></script>
     <!-- Services: Auth -->
-    <script src="frontend/services/isAdmin.js"></script>
-    <script src="frontend/services/handleLogin.js"></script>
-    <script src="frontend/services/handleLogout.js"></script>
-    <script src="frontend/services/openChangePasswordModal.js"></script>
-    <script src="frontend/services/handleChangePassword.js"></script>
+    <script src="frontend/services/auth/isAdmin.js"></script>
+    <script src="frontend/services/auth/handleLogin.js"></script>
+    <script src="frontend/services/auth/handleLogout.js"></script>
+    <script src="frontend/services/auth/openChangePasswordModal.js"></script>
+    <script src="frontend/services/auth/handleChangePassword.js"></script>
     <!-- Services: Config -->
-    <script src="frontend/services/syncConfigFromInputs.js"></script>
-    <script src="frontend/services/toggleProviderConfig.js"></script>
-    <script src="frontend/services/saveConfigToServer.js"></script>
-    <script src="frontend/services/loadConfigFromServer.js"></script>
+    <script src="frontend/services/config/syncConfigFromInputs.js"></script>
+    <script src="frontend/services/config/toggleProviderConfig.js"></script>
+    <script src="frontend/services/config/saveConfigToServer.js"></script>
+    <script src="frontend/services/config/loadConfigFromServer.js"></script>
     <!-- Services: People -->
-    <script src="frontend/services/sortPeople.js"></script>
-    <script src="frontend/services/handleStatusChange.js"></script>
-    <script src="frontend/services/openPersonModal.js"></script>
-    <script src="frontend/services/savePerson.js"></script>
-    <script src="frontend/services/editPerson.js"></script>
-    <script src="frontend/services/deletePerson.js"></script>
-    <script src="frontend/services/toggleAdmin.js"></script>
-    <script src="frontend/services/populatePersonSelect.js"></script>
+    <script src="frontend/services/people/sortPeople.js"></script>
+    <script src="frontend/services/people/handleStatusChange.js"></script>
+    <script src="frontend/services/people/openPersonModal.js"></script>
+    <script src="frontend/services/people/savePerson.js"></script>
+    <script src="frontend/services/people/editPerson.js"></script>
+    <script src="frontend/services/people/deletePerson.js"></script>
+    <script src="frontend/services/people/toggleAdmin.js"></script>
+    <script src="frontend/services/people/populatePersonSelect.js"></script>
     <!-- Services: Shifts -->
-    <script src="frontend/services/sortShifts.js"></script>
-    <script src="frontend/services/openShiftModal.js"></script>
-    <script src="frontend/services/saveShift.js"></script>
-    <script src="frontend/services/editShift.js"></script>
-    <script src="frontend/services/deleteShift.js"></script>
+    <script src="frontend/services/shifts/sortShifts.js"></script>
+    <script src="frontend/services/shifts/openShiftModal.js"></script>
+    <script src="frontend/services/shifts/saveShift.js"></script>
+    <script src="frontend/services/shifts/editShift.js"></script>
+    <script src="frontend/services/shifts/deleteShift.js"></script>
     <!-- Services: Notifications -->
-    <script src="frontend/services/updateNotificationBadge.js"></script>
-    <script src="frontend/services/renderNotifications.js"></script>
-    <script src="frontend/services/openSwapModal.js"></script>
-    <script src="frontend/services/updateSwapTargetShifts.js"></script>
-    <script src="frontend/services/handleSwapRequest.js"></script>
-    <script src="frontend/services/acceptSwap.js"></script>
-    <script src="frontend/services/rejectSwap.js"></script>
+    <script src="frontend/services/notifications/updateNotificationBadge.js"></script>
+    <script src="frontend/services/notifications/renderNotifications.js"></script>
+    <script src="frontend/services/notifications/openSwapModal.js"></script>
+    <script src="frontend/services/notifications/updateSwapTargetShifts.js"></script>
+    <script src="frontend/services/notifications/handleSwapRequest.js"></script>
+    <script src="frontend/services/notifications/acceptSwap.js"></script>
+    <script src="frontend/services/notifications/rejectSwap.js"></script>
     <!-- Services: Server -->
-    <script src="frontend/services/syncLoginWithServer.js"></script>
-    <script src="frontend/services/ensureServerAuth.js"></script>
-    <script src="frontend/services/saveScheduleToServer.js"></script>
-    <script src="frontend/services/loadScheduleFromServer.js"></script>
+    <script src="frontend/services/server/syncLoginWithServer.js"></script>
+    <script src="frontend/services/server/ensureServerAuth.js"></script>
+    <script src="frontend/services/server/saveScheduleToServer.js"></script>
+    <script src="frontend/services/server/loadScheduleFromServer.js"></script>
+    <script src="frontend/services/server/updateSyncStatus.js"></script>
     <!-- Services: Schedule -->
-    <script src="frontend/services/buildSchedulePrompt.js"></script>
-    <script src="frontend/services/callOpenRouterAPI.js"></script>
-    <script src="frontend/services/callGeminiAPI.js"></script>
-    <script src="frontend/services/runLocalGenerationAlgorithm.js"></script>
-    <script src="frontend/services/cleanScheduleConflicts.js"></script>
-    <script src="frontend/services/generateNextWeek.js"></script>
-    <script src="frontend/services/generateSchedule.js"></script>
+    <script src="frontend/services/schedule/buildSchedulePrompt.js"></script>
+    <script src="frontend/services/schedule/callOpenRouterAPI.js"></script>
+    <script src="frontend/services/schedule/callGeminiAPI.js"></script>
+    <script src="frontend/services/schedule/runLocalGenerationAlgorithm.js"></script>
+    <script src="frontend/services/schedule/cleanScheduleConflicts.js"></script>
+    <script src="frontend/services/schedule/generateNextWeek.js"></script>
+    <script src="frontend/services/schedule/generateSchedule.js"></script>
+
     <!-- Components -->
-    <script src="frontend/components/login.component.js"></script>
-    <script src="frontend/components/renderScheduleBoard.js"></script>
-    <script src="frontend/components/updateScheduleFromDOM.js"></script>
-    <script src="frontend/components/validateSchedule.js"></script>
-    <script src="frontend/components/highlightPerson.js"></script>
-    <script src="frontend/components/people-list.component.js"></script>
-    <script src="frontend/components/shifts-list.component.js"></script>
-    <script src="frontend/components/minha-escala.component.js"></script>
-    <script src="frontend/components/export-pdf.component.js"></script>
+    <script src="frontend/components/login/login.js"></script>
+
+    <script src="frontend/components/schedule-board/renderScheduleBoard.js"></script>
+    <script src="frontend/components/schedule-board/updateScheduleFromDOM.js"></script>
+    <script src="frontend/components/schedule-board/validateSchedule.js"></script>
+    <script src="frontend/components/people-list/highlightPerson.js"></script>
+    <script src="frontend/components/people-list/people-list.js"></script>
+    <script src="frontend/components/shifts-list/shifts-list.js"></script>
+    <script src="frontend/components/minha-escala/minha-escala.js"></script>
+    <script src="frontend/components/export-pdf/export-pdf.js"></script>
+
     <!-- App Functions (one per file) -->
     <script src="frontend/renderClosedDates.js"></script>
     <script src="frontend/removeClosedDate.js"></script>

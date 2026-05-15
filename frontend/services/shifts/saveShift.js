@@ -6,28 +6,31 @@ function saveShift(event) {
     var capVal = parseInt(document.getElementById('shift-capacity').value);
     const capacity = isNaN(capVal) ? 2 : capVal;
 
-    if (!name || !time) { alert('Nome e horário são obrigatórios.'); return; }
-
+    if (!name || !time) { 
+        showToast('Nome e horário são obrigatórios.', 'warning'); 
+        return; 
+    }
+    
     if (id) {
         const index = state.shifts.findIndex(s => s.id === id);
         if (index !== -1) {
-            state.shifts[index].name = name;
-            state.shifts[index].time = time;
-            state.shifts[index].capacity = capacity;
+            state.shifts[index] = { ...state.shifts[index], name, time, capacity: parseInt(capacity) };
         }
     } else {
-        const newShift = { id: generateId(), name, time, capacity };
-        state.shifts.push(newShift);
-        const days = getWorkingDays();
-        days.forEach(day => {
-            state.schedule[`${newShift.id}-${day}`] = [];
+        state.shifts.push({
+            id: generateId(),
+            name,
+            time,
+            capacity: parseInt(capacity)
         });
     }
 
     sortShifts();
     saveState();
-
     renderShifts();
     renderScheduleBoard();
+    
+    // Close modal
     document.getElementById('modal-shift').classList.remove('active');
+    showToast('Turno salvo com sucesso!', 'success');
 }

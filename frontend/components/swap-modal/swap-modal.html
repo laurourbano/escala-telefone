@@ -1,0 +1,36 @@
+<!-- Swap Modal -->
+<div class="modal-overlay" id="modal-swap">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Solicitar Troca de Turno</h3>
+            <button class="close-modal"><i class="ph ph-x"></i></button>
+        </div>
+        <div class="modal-body">
+            <form id="form-swap">
+                <input type="hidden" id="swap-my-shift-id">
+                <input type="hidden" id="swap-my-date">
+
+                <div class="form-group">
+                    <label>Meu Turno Selecionado</label>
+                    <p id="swap-my-details" style="font-size: 0.9rem; color: var(--text-muted);"></p>
+                </div>
+
+                <div class="form-group">
+                    <label>Com quem deseja trocar?</label>
+                    <select id="swap-target-person" required>
+                        <option value="">Selecione um colega...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Pelo turno dele em:</label>
+                    <select id="swap-target-shift" required disabled>
+                        <option value="">Selecione o turno do colega...</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="primary-btn w-full">Enviar Solicitação</button>
+            </form>
+        </div>
+    </div>
+</div>

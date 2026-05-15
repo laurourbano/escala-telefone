@@ -83,7 +83,7 @@ function setupEventListeners() {
         var newEnd = e.target.value;
         if (newEnd) {
             if (state.scheduleStartDate && newEnd < state.scheduleStartDate) {
-                alert('A data final nao pode ser anterior a data inicial.');
+                showToast('A data final não pode ser anterior à data inicial.', 'error');
                 scheduleEndDateInput.value = state.scheduleEndDate;
                 return;
             }
@@ -120,12 +120,12 @@ function setupEventListeners() {
                 saveState();
                 renderClosedDates();
                 renderScheduleBoard();
-                alert(added + ' feriados nacionais adicionados.');
+                showToast(added + ' feriados nacionais adicionados.', 'success');
             } else {
-                alert('Nenhum feriado novo para adicionar neste periodo.');
+                showToast('Nenhum feriado novo para adicionar neste período.', 'info');
             }
         } catch (error) {
-            alert('Erro ao buscar feriados da BrasilAPI.');
+            showToast('Erro ao buscar feriados da BrasilAPI.', 'error');
         }
     });
     document.getElementById('btn-generate').addEventListener('click', generateSchedule);
@@ -137,7 +137,7 @@ function setupEventListeners() {
     document.getElementById('btn-export-personal').addEventListener('click', function () {
         var personId = document.getElementById('select-person-schedule').value;
         if (!personId) {
-            alert('Selecione um nome primeiro!');
+            showToast('Selecione um nome primeiro!', 'warning');
             return;
         }
         window.print();

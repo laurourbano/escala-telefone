@@ -5,15 +5,15 @@ function handleChangePassword(event) {
     const confirm = document.getElementById('pw-confirm').value;
 
     if (state.currentUser.password !== current) {
-        alert('Senha atual incorreta.');
+        showToast('Senha atual incorreta.', 'error');
         return;
     }
     if (newPw !== confirm) {
-        alert('Nova senha e confirmação não conferem.');
+        showToast('Nova senha e confirmação não conferem.', 'error');
         return;
     }
     if (newPw.length < 4) {
-        alert('A senha deve ter pelo menos 4 caracteres.');
+        showToast('A senha deve ter pelo menos 4 caracteres.', 'warning');
         return;
     }
 
@@ -22,5 +22,5 @@ function handleChangePassword(event) {
     state.currentUser.password = newPw;
     saveState();
     document.getElementById('modal-change-password').classList.remove('active');
-    alert('Senha alterada com sucesso!');
+    showToast('Senha alterada com sucesso!', 'success');
 }

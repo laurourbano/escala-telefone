@@ -17,5 +17,5 @@ function acceptSwap(notificationId) {
     updateNotificationBadge();
     renderPersonalSchedule(state.currentUser.id);
     renderScheduleBoard();
-    alert("Troca realizada com sucesso!");
+    showToast("Troca realizada com sucesso!", "success");
 }

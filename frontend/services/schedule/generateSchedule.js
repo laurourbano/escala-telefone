@@ -1,8 +1,15 @@
 async function generateSchedule(skipConfirm) {
-    if (!skipConfirm && !confirm('Tem certeza que deseja gerar uma nova escala? A escala atual será substituída.')) return;
+    if (!skipConfirm) {
+        showConfirm(
+            'Tem certeza que deseja gerar uma nova escala?',
+            'A escala atual será substituída.',
+            () => generateSchedule(true)
+        );
+        return;
+    }
 
     if (state.people.length === 0 || state.shifts.length === 0) {
-        alert("Adicione pessoas e horários primeiro!");
+        showToast("Adicione pessoas e horários primeiro!", "warning");
         return;
     }
 
@@ -64,11 +71,11 @@ async function generateSchedule(skipConfirm) {
             let msg = '';
             if (removed > 0) msg += `${removed} conflito${removed !== 1 ? 's' : ''} removido${removed !== 1 ? 's' : ''} (indisponíveis/mesmo dia/excesso).\n`;
             if (totalUnfilled > 0) msg += `Faltam ~${Math.ceil(totalUnfilled / 5)} funcionário${Math.ceil(totalUnfilled / 5) !== 1 ? 's' : ''} para preencher ${totalUnfilled} vaga${totalUnfilled !== 1 ? 's' : ''}.`;
-            alert(msg);
+            showToast(msg, "warning");
         }
     } catch (e) {
         console.error("Erro ao gerar:", e);
-        alert("Ocorreu um erro ao gerar a escala: " + e.message);
+        showToast("Ocorreu um erro ao gerar a escala: " + e.message, "error");
     } finally {
         document.getElementById('ai-loading').classList.add('hidden');
     }

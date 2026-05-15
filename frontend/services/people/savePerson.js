@@ -11,7 +11,8 @@ function savePerson(event) {
     const unavailabilityStart = document.getElementById('person-unavailability-start').value;
     const unavailabilityEnd = document.getElementById('person-unavailability-end').value;
 
-    if (!name) { alert('O nome é obrigatório.'); return; }
+    if (!name) { showToast('O nome é obrigatório.', 'warning'); return; }
+
 
     if (id) {
         const index = state.people.findIndex(p => p.id === id);
@@ -50,7 +51,7 @@ function savePerson(event) {
     }
     sortPeople();
     saveState();
-
     renderPeople();
-    document.getElementById('modal-person').classList.remove('active');
+    closeModal('modal-person');
+    showToast('Pessoa salva com sucesso!', 'success');
 }

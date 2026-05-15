@@ -6,7 +6,7 @@ function handleSwapRequest(event) {
     const targetShiftRaw = document.getElementById('swap-target-shift').value;
 
     if (!targetPersonId || !targetShiftRaw) {
-        alert('Selecione um colega e um turno para troca.');
+        showToast('Selecione um colega e um turno para troca.', 'warning');
         return;
     }
 
@@ -26,7 +26,7 @@ function handleSwapRequest(event) {
     });
 
     saveState();
-    alert('Solicitação de troca enviada!');
+    showToast('Solicitação de troca enviada!', 'success');
     document.getElementById('modal-swap').classList.remove('active');
     updateNotificationBadge();
 }
